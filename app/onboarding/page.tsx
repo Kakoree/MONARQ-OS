@@ -3,8 +3,13 @@ import { getCurrentMembership } from "@/lib/membership";
 import { OnboardingForm } from "./OnboardingForm";
 import { Card } from "@/components/ui/Card";
 
-export default async function OnboardingPage() {
+export default async function OnboardingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ code?: string }>;
+}) {
   const { user, status } = await getCurrentMembership();
+  const { code } = await searchParams;
 
   if (!user) redirect("/login");
   if (status === "active") redirect("/");
@@ -24,7 +29,7 @@ export default async function OnboardingPage() {
           your membership.
         </p>
         <div className="mt-6">
-          <OnboardingForm />
+          <OnboardingForm defaultCode={code} />
         </div>
       </Card>
     </main>

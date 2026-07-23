@@ -5,7 +5,7 @@ import { redeemAccessCode, type RedeemState } from "./actions";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 
-export function OnboardingForm() {
+export function OnboardingForm({ defaultCode }: { defaultCode?: string }) {
   const [state, action, pending] = useActionState<RedeemState, FormData>(
     redeemAccessCode,
     undefined
@@ -18,6 +18,7 @@ export function OnboardingForm() {
         name="code"
         placeholder="Access code"
         className="uppercase tracking-wide"
+        defaultValue={defaultCode}
         required
         autoComplete="off"
         onChange={(e) => {
