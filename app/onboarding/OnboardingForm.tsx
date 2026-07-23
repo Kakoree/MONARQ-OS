@@ -20,6 +20,9 @@ export function OnboardingForm() {
         className="uppercase tracking-wide"
         required
         autoComplete="off"
+        onChange={(e) => {
+          e.currentTarget.value = e.currentTarget.value.toUpperCase();
+        }}
       />
       <Button type="submit" disabled={pending} className="w-full">
         {pending ? "Checking..." : "Redeem code"}

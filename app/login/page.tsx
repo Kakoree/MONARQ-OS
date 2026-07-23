@@ -38,6 +38,9 @@ export default function LoginPage() {
             className="uppercase tracking-wide"
             autoComplete="off"
             required
+            onChange={(e) => {
+              e.currentTarget.value = e.currentTarget.value.toUpperCase();
+            }}
           />
           <Button type="submit" className="w-full" disabled={pending}>
             {pending ? "Checking..." : "Continue"}
