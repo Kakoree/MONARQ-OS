@@ -21,7 +21,12 @@ export async function redeemAccessCode(
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/login");
+    // Was a silent redirect("/login") — which looks identical to "the page
+    // just refreshed" with no explanation. Surfacing this explicitly so a
+    // session problem is distinguishable from a genuinely bad code.
+    return {
+      error: "Your session isn't active. Refresh the page and try again.",
+    };
   }
 
   const { error } = await supabase.rpc("redeem_access_code", {
