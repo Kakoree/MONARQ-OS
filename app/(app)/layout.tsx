@@ -11,7 +11,12 @@ export default async function AppLayout({
 
   if (!user) redirect("/login");
   if (status === "suspended" || status === "revoked") redirect("/pending");
-  if (status === "pending" || status === null) redirect("/onboarding");
+  // Admins are provisioned directly in the database, not via access-code
+  // redemption — they must never be routed through the member onboarding
+  // gate just for lacking a redeemed code.
+  if (role !== "admin" && (status === "pending" || status === null)) {
+    redirect("/onboarding");
+  }
 
   return (
     <AppShell userEmail={user.email ?? null} isAdmin={role === "admin"}>
