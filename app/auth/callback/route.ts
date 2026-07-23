@@ -2,10 +2,13 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
+// Only used by the admin password-reset bootstrap flow now
+// (app/login/admin/actions.ts) — the V1 member entry no longer uses email
+// at all (see app/login/temporary-v1-actions.ts).
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
-  const invite = requestUrl.searchParams.get("invite");
+  const next = requestUrl.searchParams.get("next");
 
   if (!code) {
     return NextResponse.redirect(
@@ -22,13 +25,8 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // If sign-in started from the access-code step, redeem it now that a
-  // session exists (redeem_access_code needs auth.uid()). Best-effort: if
-  // this fails — bad, expired, or already-used code — the member still
-  // lands in the app with a valid session and falls through to the existing
-  // manual retry at /onboarding via app/(app)/layout.tsx's membership gate.
-  if (invite) {
-    await supabase.rpc("redeem_access_code", { p_code: invite });
+  if (next === "set-password") {
+    return NextResponse.redirect(new URL("/login/admin/reset", request.url));
   }
 
   return NextResponse.redirect(new URL("/", request.url));

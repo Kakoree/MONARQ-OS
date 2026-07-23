@@ -1,28 +1,32 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import Link from "next/link";
-import { sendSignInLink, type SignInState } from "../actions";
+import {
+  signInAdmin,
+  requestAdminPasswordReset,
+  type AdminSignInState,
+  type PasswordResetState,
+} from "./actions";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
 
-const initialState: SignInState = { status: "idle" };
+const initialSignInState: AdminSignInState = undefined;
+const initialResetState: PasswordResetState = { status: "idle" };
 
-// Deliberately at /login/admin, not /admin/login — app/admin/layout.tsx
-// gates on an active admin role, which would make a page nested under it
-// unreachable by anyone not already authenticated as an admin.
-//
-// This is also the only way back in for any returning member (not just
-// admins) who no longer has their original access code — there's no way to
-// tell a returning member from an admin before authentication happens, so
-// this page is intentionally not admin-exclusive. Whether someone lands in
-// the regular app or the admin panel depends entirely on their role/status
-// after signing in, exactly as it already does elsewhere.
+// Password-based entry — no magic link. Also the only way back in for any
+// returning member without an access code (see app/login/page.tsx's
+// comment for why there's no way to tell those apart before auth happens).
 export default function AdminLoginPage() {
-  const [state, action, pending] = useActionState(
-    sendSignInLink,
-    initialState
+  const [mode, setMode] = useState<"signin" | "reset">("signin");
+  const [signInState, signInAction, signInPending] = useActionState(
+    signInAdmin,
+    initialSignInState
+  );
+  const [resetState, resetAction, resetPending] = useActionState(
+    requestAdminPasswordReset,
+    initialResetState
   );
 
   return (
@@ -33,29 +37,69 @@ export default function AdminLoginPage() {
             MONARQ ADMIN
           </span>
           <p className="mt-2 text-sm text-stone">
-            Already a member? Sign in with your email — no access code
-            needed.
+            {mode === "signin"
+              ? "Sign in with your email and password."
+              : "We'll email you a link to set a new password."}
           </p>
         </div>
-        <form action={action} className="space-y-4">
-          <Input
-            type="email"
-            name="email"
-            placeholder="you@example.com"
-            required
-          />
-          <Button type="submit" className="w-full" disabled={pending}>
-            {pending ? "Sending..." : "Continue"}
-          </Button>
-          {state.status === "sent" && (
-            <p className="text-sm text-stone">
-              Check your email for a secure link.
-            </p>
-          )}
-          {state.status === "error" && (
-            <p className="text-sm text-danger">{state.message}</p>
-          )}
-        </form>
+
+        {mode === "signin" ? (
+          <form action={signInAction} className="space-y-4">
+            <Input
+              type="email"
+              name="email"
+              placeholder="you@example.com"
+              required
+            />
+            <Input
+              type="password"
+              name="password"
+              placeholder="Password"
+              required
+            />
+            <Button type="submit" className="w-full" disabled={signInPending}>
+              {signInPending ? "Signing in..." : "Sign in"}
+            </Button>
+            {signInState?.error && (
+              <p className="text-sm text-danger">{signInState.error}</p>
+            )}
+            <button
+              type="button"
+              onClick={() => setMode("reset")}
+              className="text-xs text-stone hover:text-paper"
+            >
+              Need to set a password?
+            </button>
+          </form>
+        ) : (
+          <form action={resetAction} className="space-y-4">
+            <Input
+              type="email"
+              name="email"
+              placeholder="you@example.com"
+              required
+            />
+            <Button type="submit" className="w-full" disabled={resetPending}>
+              {resetPending ? "Sending..." : "Email me a reset link"}
+            </Button>
+            {resetState.status === "sent" && (
+              <p className="text-sm text-stone">
+                Check your email for the link.
+              </p>
+            )}
+            {resetState.status === "error" && (
+              <p className="text-sm text-danger">{resetState.message}</p>
+            )}
+            <button
+              type="button"
+              onClick={() => setMode("signin")}
+              className="text-xs text-stone hover:text-paper"
+            >
+              ← Back to sign in
+            </button>
+          </form>
+        )}
+
         <div className="mt-6 text-center">
           <Link href="/login" className="text-xs text-stone hover:text-paper">
             ← Back to member entry
