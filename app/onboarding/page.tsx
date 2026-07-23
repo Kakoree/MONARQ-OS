@@ -1,0 +1,32 @@
+import { redirect } from "next/navigation";
+import { getCurrentMembership } from "@/lib/membership";
+import { OnboardingForm } from "./OnboardingForm";
+import { Card } from "@/components/ui/Card";
+
+export default async function OnboardingPage() {
+  const { user, status } = await getCurrentMembership();
+
+  if (!user) redirect("/login");
+  if (status === "active") redirect("/");
+  if (status === "suspended" || status === "revoked") redirect("/pending");
+
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-ink px-6">
+      <Card className="w-full max-w-md">
+        <span className="font-display text-2xl tracking-[0.2em] text-paper">
+          MONARQ
+        </span>
+        <h1 className="mt-4 text-lg font-medium text-paper">
+          Enter your access code
+        </h1>
+        <p className="mt-1 text-sm text-stone">
+          MONARQ is invite-only. Enter the code you were given to activate
+          your membership.
+        </p>
+        <div className="mt-6">
+          <OnboardingForm />
+        </div>
+      </Card>
+    </main>
+  );
+}
