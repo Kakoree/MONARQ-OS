@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
+import { getSiteURL } from "@/lib/site-url";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -19,6 +20,10 @@ const instrumentSerif = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
+  // Without this, Next.js resolves any relative metadata URL (OG images,
+  // etc.) against localhost by default — the same failure mode as the
+  // auth-redirect bug, just in metadata instead of a redirect.
+  metadataBase: new URL(getSiteURL()),
   title: "MONARQ",
   description: "The private operating system for the MONARQ club.",
 };
