@@ -8,7 +8,7 @@ export default async function OnboardingPage({
 }: {
   searchParams: Promise<{ code?: string }>;
 }) {
-  const { user, status, role, debugError } = await getCurrentMembership();
+  const { user, status } = await getCurrentMembership();
   const { code } = await searchParams;
 
   if (!user) redirect("/login");
@@ -30,14 +30,6 @@ export default async function OnboardingPage({
         </p>
         <div className="mt-6">
           <OnboardingForm defaultCode={code} />
-        </div>
-        {/* TEMPORARY V1 diagnostic — remove once the admin-redirect
-            investigation is closed. */}
-        <div className="mt-6 rounded border border-line p-3 text-xs text-stone">
-          <p>debug user.id: {user.id}</p>
-          <p>debug status: {String(status)}</p>
-          <p>debug role: {String(role)}</p>
-          <p>debug error: {debugError ?? "none"}</p>
         </div>
       </Card>
     </main>

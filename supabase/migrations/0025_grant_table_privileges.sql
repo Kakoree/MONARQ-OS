@@ -11,28 +11,21 @@
 -- plausible result (e.g. a brand-new member's status reading as null either
 -- way). This does not broaden access: existing RLS policies remain the only
 -- thing that decides which rows are visible or writable.
+--
+-- Scoped to the 4 tables that actually exist in this project as of this
+-- migration (0001's tables only — 0004 onward were never applied here).
+-- The `alter default privileges` line below makes this a one-time fix:
+-- every table created by later migrations (0004+) inherits the same grant
+-- automatically, with no per-table grant statement needed going forward.
 
 grant usage on schema public to authenticated;
+
+alter default privileges in schema public
+  grant select, insert, update, delete on tables to authenticated;
 
 grant select, insert, update, delete on
   public.profiles,
   public.memberships,
   public.access_codes,
-  public.redemptions,
-  public.habits,
-  public.habit_check_ins,
-  public.teaching_categories,
-  public.teachings,
-  public.teaching_content,
-  public.teaching_progress,
-  public.challenges,
-  public.challenge_participation,
-  public.xp_events,
-  public.posts,
-  public.comments,
-  public.reactions,
-  public.audit_log,
-  public.events,
-  public.event_rsvps,
-  public.drops
+  public.redemptions
 to authenticated;

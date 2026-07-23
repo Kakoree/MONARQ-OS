@@ -6,7 +6,6 @@ export async function getCurrentMembership(): Promise<{
   user: User | null;
   status: MembershipStatus | null;
   role: MemberRole | null;
-  debugError: string | null;
 }> {
   const supabase = await createClient();
   const {
@@ -14,7 +13,7 @@ export async function getCurrentMembership(): Promise<{
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return { user: null, status: null, role: null, debugError: null };
+    return { user: null, status: null, role: null };
   }
 
   const { data: membership, error } = await supabase
@@ -23,14 +22,13 @@ export async function getCurrentMembership(): Promise<{
     .eq("user_id", user.id)
     .maybeSingle();
 
+  if (error) {
+    console.error("getCurrentMembership query failed:", error.code, error.message);
+  }
+
   return {
     user,
     status: membership?.status ?? null,
     role: membership?.role ?? null,
-    // TEMPORARY V1 diagnostic — surfaced on /onboarding so a query failure
-    // (e.g. RLS denial) is distinguishable from a genuinely missing row
-    // without needing Vercel log access. Remove once the admin-redirect
-    // investigation is closed.
-    debugError: error ? `${error.code ?? "?"}: ${error.message}` : null,
   };
 }
