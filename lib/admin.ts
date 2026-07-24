@@ -186,6 +186,48 @@ export async function getReports(status: "open" | "all" = "open"): Promise<Admin
   }));
 }
 
+export type AdminMentor = {
+  id: string;
+  userId: string;
+  displayName: string;
+  headline: string;
+  bio: string;
+  focusAreas: string[];
+  isApproved: boolean;
+  isAcceptingRequests: boolean;
+  createdAt: string;
+};
+
+export async function getMentorsAdmin(): Promise<AdminMentor[]> {
+  const supabase = await createClient();
+
+  const { data: mentors } = await supabase
+    .from("mentors")
+    .select(
+      "id, user_id, headline, bio, focus_areas, is_approved, is_accepting_requests, created_at"
+    )
+    .order("created_at", { ascending: false });
+
+  const userIds = (mentors ?? []).map((m) => m.user_id);
+  const { data: profiles } = userIds.length
+    ? await supabase.from("profiles").select("id, display_name").in("id", userIds)
+    : { data: [] as { id: string; display_name: string | null }[] };
+
+  const nameById = new Map((profiles ?? []).map((p) => [p.id, p.display_name]));
+
+  return (mentors ?? []).map((m) => ({
+    id: m.id,
+    userId: m.user_id,
+    displayName: nameById.get(m.user_id) ?? "Member",
+    headline: m.headline,
+    bio: m.bio,
+    focusAreas: m.focus_areas,
+    isApproved: m.is_approved,
+    isAcceptingRequests: m.is_accepting_requests,
+    createdAt: m.created_at,
+  }));
+}
+
 export type AuditLogEntry = {
   id: string;
   actorName: string;

@@ -39,7 +39,9 @@ export default async function TeachingDetailPage({
         <Card>
           <Badge>Locked</Badge>
           <p className="mt-3 text-sm text-stone">
-            This teaching unlocks at a higher membership level.
+            {!teaching.roleUnlocked
+              ? "This teaching unlocks at a higher membership level."
+              : "Complete the previous teaching in this track first."}
           </p>
         </Card>
       )}

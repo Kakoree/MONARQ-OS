@@ -43,9 +43,16 @@ export default async function TeachingsPage() {
       ) : (
         groups.map((group) => (
           <div key={group.id ?? "general"} className="space-y-3">
-            <h2 className="text-sm font-medium uppercase tracking-wider text-stone">
-              {group.name}
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-medium uppercase tracking-wider text-stone">
+                {group.name}
+              </h2>
+              {group.mentorName && (
+                <Badge className="border-gold/40 text-gold">
+                  Mentor-led · {group.mentorName}
+                </Badge>
+              )}
+            </div>
             <div className="grid gap-3 sm:grid-cols-2">
               {group.teachings.map((t) =>
                 t.isUnlocked ? (
@@ -73,6 +80,11 @@ export default async function TeachingsPage() {
                       <Badge>Locked</Badge>
                     </div>
                     <p className="mt-2 text-sm text-stone">{t.summary}</p>
+                    <p className="mt-2 text-xs text-stone">
+                      {!t.roleUnlocked
+                        ? "Unlocks at a higher membership level."
+                        : "Complete the previous teaching in this track first."}
+                    </p>
                   </Card>
                 )
               )}

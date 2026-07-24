@@ -8,6 +8,7 @@ const ADMIN_NAV = [
   { label: "Identity Markers", href: "/admin/identity-markers" },
   { label: "Seasons", href: "/admin/seasons" },
   { label: "Challenges", href: "/admin/challenges" },
+  { label: "Mentors", href: "/admin/mentors" },
   { label: "Moderation", href: "/admin/moderation" },
   { label: "Audit Log", href: "/admin/audit-log" },
 ];

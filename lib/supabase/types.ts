@@ -6,6 +6,12 @@ export type MembershipStatus = "pending" | "active" | "suspended" | "revoked";
 export type MemberRole = "guest" | "member" | "moderator" | "admin";
 export type ConnectionStatus = "pending" | "accepted" | "declined";
 export type ReportStatus = "open" | "resolved" | "dismissed";
+export type MentorshipRequestStatus =
+  | "pending"
+  | "confirmed"
+  | "completed"
+  | "declined"
+  | "cancelled";
 
 export interface Database {
   public: {
@@ -180,18 +186,21 @@ export interface Database {
           id: string;
           name: string;
           sort_order: number;
+          mentor_id: string | null;
           created_at: string;
         };
         Insert: {
           id?: string;
           name: string;
           sort_order?: number;
+          mentor_id?: string | null;
           created_at?: string;
         };
         Update: {
           id?: string;
           name?: string;
           sort_order?: number;
+          mentor_id?: string | null;
           created_at?: string;
         };
         Relationships: [];
@@ -730,6 +739,81 @@ export interface Database {
         };
         Relationships: [];
       };
+      mentors: {
+        Row: {
+          id: string;
+          user_id: string;
+          headline: string;
+          bio: string;
+          focus_areas: string[];
+          is_approved: boolean;
+          is_accepting_requests: boolean;
+          approved_at: string | null;
+          approved_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          headline: string;
+          bio: string;
+          focus_areas?: string[];
+          is_approved?: boolean;
+          is_accepting_requests?: boolean;
+          approved_at?: string | null;
+          approved_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          headline?: string;
+          bio?: string;
+          focus_areas?: string[];
+          is_approved?: boolean;
+          is_accepting_requests?: boolean;
+          approved_at?: string | null;
+          approved_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      mentorship_requests: {
+        Row: {
+          id: string;
+          mentor_id: string;
+          member_id: string;
+          message: string | null;
+          status: MentorshipRequestStatus;
+          scheduled_at: string | null;
+          join_url: string | null;
+          created_at: string;
+          responded_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          mentor_id: string;
+          member_id: string;
+          message?: string | null;
+          status?: MentorshipRequestStatus;
+          scheduled_at?: string | null;
+          join_url?: string | null;
+          created_at?: string;
+          responded_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          mentor_id?: string;
+          member_id?: string;
+          message?: string | null;
+          status?: MentorshipRequestStatus;
+          scheduled_at?: string | null;
+          join_url?: string | null;
+          created_at?: string;
+          responded_at?: string | null;
+        };
+        Relationships: [];
+      };
       habit_grace_tokens: {
         Row: {
           id: string;
@@ -805,11 +889,21 @@ export interface Database {
         Args: { p_connection_id: string; p_accept: boolean };
         Returns: boolean;
       };
+      update_mentor_profile: {
+        Args: {
+          p_headline: string;
+          p_bio: string;
+          p_focus_areas: string[];
+          p_is_accepting_requests: boolean;
+        };
+        Returns: boolean;
+      };
     };
     Enums: {
       membership_status: MembershipStatus;
       member_role: MemberRole;
       connection_status: ConnectionStatus;
+      mentorship_request_status: MentorshipRequestStatus;
     };
   };
 }
