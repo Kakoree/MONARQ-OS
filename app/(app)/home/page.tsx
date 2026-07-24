@@ -1,10 +1,11 @@
-import { getDailyOS, getCompletionTrend } from "@/lib/habits";
+import { getDailyOS, getCompletionTrend, getPerHabitTrend } from "@/lib/habits";
 import { getOwnProfile } from "@/lib/profile";
 import { getChallenges } from "@/lib/challenges";
 import { getLeaderboard } from "@/lib/leaderboard";
 import { getEvents } from "@/lib/events";
 import { getFeed } from "@/lib/community";
 import { getCurrentMembership } from "@/lib/membership";
+import { notifyStreakAtRiskOnce } from "@/lib/notifications";
 import { progressToNextLevel } from "@/lib/progression";
 import { Card } from "@/components/ui/Card";
 import { HabitRow } from "@/components/home/HabitRow";
@@ -12,6 +13,8 @@ import { CompletionRing } from "@/components/home/CompletionRing";
 import { CompletionTrendChart } from "@/components/home/CompletionTrendChart";
 import { WeeklyConsistencyChart } from "@/components/home/WeeklyConsistencyChart";
 import { StreakDots } from "@/components/home/StreakDots";
+import { PerHabitTrend } from "@/components/home/PerHabitTrend";
+import { AtRiskBanner } from "@/components/home/AtRiskBanner";
 import { ProgressOverview } from "@/components/home/ProgressOverview";
 import { MilestonesList } from "@/components/home/MilestonesList";
 import { LeaderboardPreview } from "@/components/home/LeaderboardPreview";
@@ -37,8 +40,15 @@ export default async function HomePage() {
     return null;
   }
 
-  const { habits, streak, completedTodayCount } = data;
+  const { habits, streak, completedTodayCount, atRisk, graceTokensAvailable, recoverableDates } =
+    data;
+
+  if (atRisk && user) {
+    await notifyStreakAtRiskOnce(user.id);
+  }
+
   const trend = habits.length > 0 ? await getCompletionTrend(14) : null;
+  const perHabitTrend = habits.length > 0 ? await getPerHabitTrend(14) : null;
   const week = trend ? trend.slice(-7) : [];
 
   const totalXp = profile?.totalXp ?? 0;
@@ -66,6 +76,13 @@ export default async function HomePage() {
         </h1>
         <p className="text-sm text-stone">{heroLine}</p>
       </div>
+
+      <AtRiskBanner
+        atRisk={atRisk}
+        streak={streak}
+        graceTokensAvailable={graceTokensAvailable}
+        recoverableDates={recoverableDates}
+      />
 
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-6">
         <Reveal>
@@ -168,6 +185,19 @@ export default async function HomePage() {
               </Card>
             </Reveal>
           </div>
+
+          {perHabitTrend && perHabitTrend.length > 0 && (
+            <Reveal delay={0.2}>
+              <Card>
+                <p className="text-xs uppercase tracking-wider text-stone">
+                  Per-habit trend — last 14 days
+                </p>
+                <div className="mt-3">
+                  <PerHabitTrend series={perHabitTrend} />
+                </div>
+              </Card>
+            </Reveal>
+          )}
 
           <div className="space-y-4">
             <h2 className="text-sm font-medium uppercase tracking-wider text-stone">

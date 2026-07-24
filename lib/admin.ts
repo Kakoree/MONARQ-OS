@@ -77,6 +77,33 @@ export async function getAccessCodes(): Promise<AdminAccessCode[]> {
   }));
 }
 
+export type AdminIdentityMarker = {
+  id: string;
+  name: string;
+  description: string | null;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
+};
+
+export async function getIdentityMarkersAdmin(): Promise<AdminIdentityMarker[]> {
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .from("identity_markers")
+    .select("id, name, description, sort_order, is_active, created_at")
+    .order("sort_order", { ascending: true });
+
+  return (data ?? []).map((m) => ({
+    id: m.id,
+    name: m.name,
+    description: m.description,
+    sortOrder: m.sort_order,
+    isActive: m.is_active,
+    createdAt: m.created_at,
+  }));
+}
+
 export type AuditLogEntry = {
   id: string;
   actorName: string;

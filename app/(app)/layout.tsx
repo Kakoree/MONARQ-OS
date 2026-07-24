@@ -8,15 +8,20 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, status, role } = await getCurrentMembership();
+  const { user, status, role, onboardingCompletedAt } = await getCurrentMembership();
 
   if (!user) redirect("/login");
   if (status === "suspended" || status === "revoked") redirect("/pending");
   // Admins are provisioned directly in the database, not via access-code
   // redemption — they must never be routed through the member onboarding
-  // gate just for lacking a redeemed code.
-  if (role !== "admin" && (status === "pending" || status === null)) {
-    redirect("/onboarding");
+  // gate just for lacking a redeemed code or an unset identity marker.
+  if (role !== "admin") {
+    if (status === "pending" || status === null) {
+      redirect("/onboarding");
+    }
+    if (status === "active" && !onboardingCompletedAt) {
+      redirect("/onboarding");
+    }
   }
 
   const [notifications, unreadCount] = await Promise.all([

@@ -14,6 +14,8 @@ export interface Database {
           display_name: string | null;
           avatar_url: string | null;
           bio: string | null;
+          identity_marker: string | null;
+          onboarding_completed_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -22,6 +24,8 @@ export interface Database {
           display_name?: string | null;
           avatar_url?: string | null;
           bio?: string | null;
+          identity_marker?: string | null;
+          onboarding_completed_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -30,6 +34,8 @@ export interface Database {
           display_name?: string | null;
           avatar_url?: string | null;
           bio?: string | null;
+          identity_marker?: string | null;
+          onboarding_completed_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -629,6 +635,33 @@ export interface Database {
         };
         Relationships: [];
       };
+      identity_markers: {
+        Row: {
+          id: string;
+          name: string;
+          description: string | null;
+          sort_order: number;
+          is_active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          description?: string | null;
+          sort_order?: number;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          description?: string | null;
+          sort_order?: number;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       habit_grace_tokens: {
         Row: {
           id: string;
@@ -683,6 +716,14 @@ export interface Database {
           p_action_url?: string | null;
         };
         Returns: string;
+      };
+      grant_grace_token: {
+        Args: { p_source: string };
+        Returns: boolean;
+      };
+      consume_grace_token: {
+        Args: { p_date: string };
+        Returns: boolean;
       };
     };
     Enums: {

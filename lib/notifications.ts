@@ -36,6 +36,33 @@ export async function createNotification(params: {
   }
 }
 
+// Home-load-triggered nudge (no cron infra exists yet — see the at-risk
+// detection design note in habits.ts). Guarded so a member only ever gets
+// one "streak at risk" notification per calendar day, however many times
+// they load Home before checking in.
+export async function notifyStreakAtRiskOnce(userId: string): Promise<void> {
+  const supabase = await createClient();
+  const todayStart = new Date();
+  todayStart.setUTCHours(0, 0, 0, 0);
+
+  const { count } = await supabase
+    .from("notifications")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("type", "streak_at_risk")
+    .gte("created_at", todayStart.toISOString());
+
+  if (count && count > 0) return;
+
+  await createNotification({
+    userId,
+    type: "streak_at_risk",
+    title: "Your streak is on the line",
+    body: "You haven't checked in today — keep it going before the day ends.",
+    actionUrl: "/home",
+  });
+}
+
 export async function getNotifications(limit = 20): Promise<NotificationItem[]> {
   const supabase = await createClient();
   const { data } = await supabase
