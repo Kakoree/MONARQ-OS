@@ -12,6 +12,7 @@ export type OwnProfile = {
   totalXp: number;
   level: number;
   createdAt: string;
+  isAnonymous: boolean;
 };
 
 export async function getOwnProfile(): Promise<OwnProfile | null> {
@@ -51,6 +52,7 @@ export async function getOwnProfile(): Promise<OwnProfile | null> {
     totalXp,
     level: levelForXp(totalXp),
     createdAt: profile.created_at,
+    isAnonymous: user.is_anonymous ?? false,
   };
 }
 

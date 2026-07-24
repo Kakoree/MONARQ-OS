@@ -32,7 +32,14 @@ export default async function AdminAccessCodesPage() {
                 className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
               >
                 <div>
-                  <p className="font-mono text-sm text-paper">{code.code}</p>
+                  <p className="font-mono text-sm text-paper">
+                    {code.code}
+                    {code.label && (
+                      <span className="ml-2 font-sans text-xs text-stone">
+                        for {code.label}
+                      </span>
+                    )}
+                  </p>
                   <p className="text-xs text-stone">
                     {code.usesCount}/{code.maxUses} used
                     {code.expiresAt &&

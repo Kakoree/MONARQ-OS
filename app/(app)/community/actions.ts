@@ -3,6 +3,34 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createNotification } from "@/lib/notifications";
+
+type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
+
+// Skips notifying when the actor is the post's own author (reacting to or
+// commenting on your own post shouldn't page you).
+async function notifyPostAuthor(
+  supabase: SupabaseServerClient,
+  postId: string,
+  actorId: string,
+  type: string,
+  verb: string
+) {
+  const [{ data: post }, { data: actorProfile }] = await Promise.all([
+    supabase.from("posts").select("user_id").eq("id", postId).maybeSingle(),
+    supabase.from("profiles").select("display_name").eq("id", actorId).maybeSingle(),
+  ]);
+
+  if (!post || post.user_id === actorId) return;
+
+  const actorName = actorProfile?.display_name ?? "A member";
+  await createNotification({
+    userId: post.user_id,
+    type,
+    title: `${actorName} ${verb}`,
+    actionUrl: `/community/${postId}`,
+  });
+}
 
 export type PostFormState = { error: string } | undefined;
 
@@ -74,6 +102,7 @@ export async function toggleReaction(postId: string) {
     await supabase.from("reactions").delete().eq("id", existing.id);
   } else {
     await supabase.from("reactions").insert({ post_id: postId, user_id: user.id });
+    await notifyPostAuthor(supabase, postId, user.id, "reaction", "reacted to your post");
   }
 
   revalidatePath("/community");
@@ -110,6 +139,8 @@ export async function addComment(
   if (error) {
     return { error: "Could not add that comment. Try again." };
   }
+
+  await notifyPostAuthor(supabase, postId, user.id, "comment", "commented on your post");
 
   revalidatePath(`/community/${postId}`);
   revalidatePath("/community");

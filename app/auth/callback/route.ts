@@ -2,13 +2,15 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-// Only used by the admin password-reset bootstrap flow now
-// (app/login/admin/actions.ts) — the V1 member entry no longer uses email
-// at all (see app/login/temporary-v1-actions.ts).
+// Shared callback for every email/OAuth round-trip: admin password-reset
+// bootstrap (next=set-password), and member sign-up/Google sign-in
+// (app/login/actions.ts), which also thread an access_code through so it
+// survives the redirect and can be handed to /onboarding.
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
   const next = requestUrl.searchParams.get("next");
+  const accessCode = requestUrl.searchParams.get("access_code");
 
   if (!code) {
     return NextResponse.redirect(
@@ -29,5 +31,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL("/login/admin/reset", request.url));
   }
 
-  return NextResponse.redirect(new URL("/", request.url));
+  // Only ever follow a same-origin relative path — `next` arrives via a URL
+  // query string, so treat it as untrusted input rather than a safe target.
+  const safePath = next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
+  const destination = new URL(safePath, request.url);
+  if (accessCode) {
+    destination.searchParams.set("code", accessCode);
+  }
+
+  return NextResponse.redirect(destination);
 }

@@ -23,6 +23,12 @@ export function CreateAccessCodeForm() {
         </div>
         <div className="space-y-1.5">
           <label className="text-xs uppercase tracking-wider text-stone">
+            For (recipient)
+          </label>
+          <Input name="label" placeholder="Jordan K." className="w-40" />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-xs uppercase tracking-wider text-stone">
             Max uses
           </label>
           <Input

@@ -66,6 +66,7 @@ export interface Database {
         Row: {
           id: string;
           code: string;
+          label: string | null;
           max_uses: number;
           uses_count: number;
           expires_at: string | null;
@@ -76,6 +77,7 @@ export interface Database {
         Insert: {
           id?: string;
           code: string;
+          label?: string | null;
           max_uses?: number;
           uses_count?: number;
           expires_at?: string | null;
@@ -86,6 +88,7 @@ export interface Database {
         Update: {
           id?: string;
           code?: string;
+          label?: string | null;
           max_uses?: number;
           uses_count?: number;
           expires_at?: string | null;
@@ -542,6 +545,117 @@ export interface Database {
         };
         Relationships: [];
       };
+      notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          type: string;
+          title: string;
+          body: string | null;
+          action_url: string | null;
+          read_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          type: string;
+          title: string;
+          body?: string | null;
+          action_url?: string | null;
+          read_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          type?: string;
+          title?: string;
+          body?: string | null;
+          action_url?: string | null;
+          read_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      seasons: {
+        Row: {
+          id: string;
+          name: string;
+          starts_at: string;
+          ends_at: string;
+          is_active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          starts_at: string;
+          ends_at: string;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          starts_at?: string;
+          ends_at?: string;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      tiers: {
+        Row: {
+          id: string;
+          name: string;
+          min_points: number;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          min_points?: number;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          min_points?: number;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      habit_grace_tokens: {
+        Row: {
+          id: string;
+          user_id: string;
+          source: string;
+          granted_at: string;
+          consumed_at: string | null;
+          consumed_for_date: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          source: string;
+          granted_at?: string;
+          consumed_at?: string | null;
+          consumed_for_date?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          source?: string;
+          granted_at?: string;
+          consumed_at?: string | null;
+          consumed_for_date?: string | null;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       active_member_ids: {
@@ -559,6 +673,16 @@ export interface Database {
       complete_challenge: {
         Args: { p_challenge_id: string };
         Returns: number;
+      };
+      create_notification: {
+        Args: {
+          p_user_id: string;
+          p_type: string;
+          p_title: string;
+          p_body?: string | null;
+          p_action_url?: string | null;
+        };
+        Returns: string;
       };
     };
     Enums: {

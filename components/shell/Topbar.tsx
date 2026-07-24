@@ -1,15 +1,21 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { signOut } from "@/lib/auth-actions";
+import type { NotificationItem } from "@/lib/notifications";
 import { NavList } from "./NavList";
 import { PageTitle } from "./PageTitle";
+import { NotificationBell } from "./NotificationBell";
 
 export function Topbar({
   userEmail,
   isAdmin,
+  notifications,
+  unreadCount,
 }: {
   userEmail: string | null;
   isAdmin: boolean;
+  notifications: NotificationItem[];
+  unreadCount: number;
 }) {
   return (
     <header className="border-b border-line">
@@ -29,6 +35,10 @@ export function Topbar({
               Admin
             </Link>
           )}
+          <NotificationBell
+            initialNotifications={notifications}
+            initialUnreadCount={unreadCount}
+          />
           {userEmail && (
             <span className="hidden text-xs text-stone sm:inline">
               {userEmail}

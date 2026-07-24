@@ -49,6 +49,7 @@ export async function getAllMembers(): Promise<AdminMemberRow[]> {
 export type AdminAccessCode = {
   id: string;
   code: string;
+  label: string | null;
   maxUses: number;
   usesCount: number;
   expiresAt: string | null;
@@ -61,12 +62,13 @@ export async function getAccessCodes(): Promise<AdminAccessCode[]> {
 
   const { data } = await supabase
     .from("access_codes")
-    .select("id, code, max_uses, uses_count, expires_at, is_active, created_at")
+    .select("id, code, label, max_uses, uses_count, expires_at, is_active, created_at")
     .order("created_at", { ascending: false });
 
   return (data ?? []).map((c) => ({
     id: c.id,
     code: c.code,
+    label: c.label,
     maxUses: c.max_uses,
     usesCount: c.uses_count,
     expiresAt: c.expires_at,

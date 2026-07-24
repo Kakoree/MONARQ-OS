@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getSiteURL } from "@/lib/site-url";
 
 export type ProfileFormState = { error: string } | undefined;
 
@@ -108,4 +109,51 @@ export async function uploadAvatar(
 
   revalidatePath("/profile");
   revalidatePath("/members");
+}
+
+// Upgrades a still-active anonymous session (V1 accounts) to a real,
+// permanent identity in place — same user.id, so every habit/XP/post
+// already on the account is preserved. An anonymous session that expires
+// before this runs has no credential to log back in with and is
+// unrecoverable; this is the only recovery window.
+export type UpgradeAccountState = { error: string } | undefined;
+
+export async function upgradeAccountWithPassword(
+  _prevState: UpgradeAccountState,
+  formData: FormData
+): Promise<UpgradeAccountState> {
+  const email = String(formData.get("email") ?? "").trim();
+  const password = String(formData.get("password") ?? "");
+
+  if (!email || !password) {
+    return { error: "Enter an email and a password." };
+  }
+  if (password.length < 8) {
+    return { error: "Password must be at least 8 characters." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ email, password });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath("/profile");
+}
+
+export async function upgradeAccountWithGoogle() {
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.linkIdentity({
+    provider: "google",
+    options: {
+      redirectTo: new URL("/auth/callback?next=/profile", getSiteURL()).toString(),
+    },
+  });
+
+  if (error || !data.url) {
+    redirect("/profile?error=google_unavailable");
+  }
+
+  redirect(data.url);
 }

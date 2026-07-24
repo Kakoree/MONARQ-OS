@@ -1,6 +1,7 @@
 import { getOwnProfile } from "@/lib/profile";
 import { Card } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
+import { SecureAccountCard } from "@/components/profile/SecureAccountCard";
 import { ProfileForm } from "./ProfileForm";
 import { AvatarUploadForm } from "./AvatarUploadForm";
 
@@ -19,6 +20,8 @@ export default async function ProfilePage() {
           How you show up inside MONARQ.
         </p>
       </div>
+
+      {profile.isAnonymous && <SecureAccountCard />}
 
       <Card className="space-y-4">
         <div className="flex items-center gap-4">

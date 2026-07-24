@@ -18,6 +18,7 @@ export async function createAccessCode(
   }
 
   const code = String(formData.get("code") ?? "").trim().toUpperCase();
+  const label = String(formData.get("label") ?? "").trim();
   const maxUses = Number(formData.get("max_uses") ?? 1);
 
   if (!code) {
@@ -30,7 +31,7 @@ export async function createAccessCode(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("access_codes")
-    .insert({ code, max_uses: maxUses, created_by: admin.id })
+    .insert({ code, label: label || null, max_uses: maxUses, created_by: admin.id })
     .select("id")
     .single();
 
@@ -42,7 +43,7 @@ export async function createAccessCode(
     action: "access_code_created",
     targetTable: "access_codes",
     targetId: data.id,
-    metadata: { code, max_uses: maxUses },
+    metadata: { code, label: label || null, max_uses: maxUses },
   });
 
   revalidatePath("/admin/access-codes");

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getCurrentMembership } from "@/lib/membership";
+import { getNotifications, getUnreadNotificationCount } from "@/lib/notifications";
 import { AppShell } from "@/components/shell/AppShell";
 
 export default async function AppLayout({
@@ -18,8 +19,18 @@ export default async function AppLayout({
     redirect("/onboarding");
   }
 
+  const [notifications, unreadCount] = await Promise.all([
+    getNotifications(10),
+    getUnreadNotificationCount(),
+  ]);
+
   return (
-    <AppShell userEmail={user.email ?? null} isAdmin={role === "admin"}>
+    <AppShell
+      userEmail={user.email ?? null}
+      isAdmin={role === "admin"}
+      notifications={notifications}
+      unreadCount={unreadCount}
+    >
       {children}
     </AppShell>
   );
