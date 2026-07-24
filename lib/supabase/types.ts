@@ -898,6 +898,22 @@ export interface Database {
         };
         Returns: boolean;
       };
+      confirm_mentorship_request: {
+        Args: { p_request_id: string; p_scheduled_at: string; p_join_url: string };
+        Returns: boolean;
+      };
+      decline_mentorship_request: {
+        Args: { p_request_id: string };
+        Returns: boolean;
+      };
+      complete_mentorship_request: {
+        Args: { p_request_id: string };
+        Returns: boolean;
+      };
+      cancel_mentorship_request: {
+        Args: { p_request_id: string };
+        Returns: boolean;
+      };
     };
     Enums: {
       membership_status: MembershipStatus;

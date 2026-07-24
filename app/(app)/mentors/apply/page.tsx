@@ -1,5 +1,6 @@
-import { getOwnMentorStatus } from "@/lib/mentors";
+import { getMentorInbox, getOwnMentorStatus } from "@/lib/mentors";
 import { Card } from "@/components/ui/Card";
+import { MentorInbox } from "@/components/mentors/MentorInbox";
 import { ApplyForm } from "./ApplyForm";
 import { EditMentorProfileForm } from "./EditMentorProfileForm";
 
@@ -9,6 +10,8 @@ export default async function MentorApplyPage() {
   if (!status) {
     return null;
   }
+
+  const inbox = status.state === "approved" ? await getMentorInbox() : null;
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -38,14 +41,29 @@ export default async function MentorApplyPage() {
       )}
 
       {status.state === "approved" && (
-        <Card>
-          <EditMentorProfileForm
-            headline={status.headline}
-            bio={status.bio}
-            focusAreas={status.focusAreas}
-            isAcceptingRequests={status.isAcceptingRequests}
-          />
-        </Card>
+        <>
+          <Card>
+            <EditMentorProfileForm
+              headline={status.headline}
+              bio={status.bio}
+              focusAreas={status.focusAreas}
+              isAcceptingRequests={status.isAcceptingRequests}
+            />
+          </Card>
+
+          <div>
+            <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-stone">
+              Requests
+            </h2>
+            {!inbox || inbox.length === 0 ? (
+              <Card>
+                <p className="text-sm text-stone">No mentorship requests yet.</p>
+              </Card>
+            ) : (
+              <MentorInbox requests={inbox} />
+            )}
+          </div>
+        </>
       )}
     </div>
   );

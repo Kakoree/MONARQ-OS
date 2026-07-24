@@ -171,6 +171,156 @@ export async function updateOwnMentorProfile(params: {
   return { error: undefined };
 }
 
+export type MentorshipRequestItem = {
+  id: string;
+  otherUserId: string;
+  otherDisplayName: string;
+  message: string | null;
+  status: string;
+  scheduledAt: string | null;
+  joinUrl: string | null;
+  createdAt: string;
+};
+
+// A member's own outgoing requests — one row per mentor they've reached
+// out to, newest first.
+export async function getMyMentorshipRequests(): Promise<MentorshipRequestItem[] | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return null;
+
+  const { data: requests } = await supabase
+    .from("mentorship_requests")
+    .select("id, mentor_id, message, status, scheduled_at, join_url, created_at")
+    .eq("member_id", user.id)
+    .order("created_at", { ascending: false });
+
+  if (!requests || requests.length === 0) return [];
+
+  const mentorIds = Array.from(new Set(requests.map((r) => r.mentor_id)));
+  const { data: mentors } = await supabase
+    .from("mentors")
+    .select("id, user_id")
+    .in("id", mentorIds);
+
+  const mentorUserIds = (mentors ?? []).map((m) => m.user_id);
+  const { data: profiles } = mentorUserIds.length
+    ? await supabase.from("profiles").select("id, display_name").in("id", mentorUserIds)
+    : { data: [] as { id: string; display_name: string | null }[] };
+
+  const mentorUserIdByMentorId = new Map((mentors ?? []).map((m) => [m.id, m.user_id]));
+  const nameByUserId = new Map((profiles ?? []).map((p) => [p.id, p.display_name]));
+
+  return requests.map((r) => {
+    const mentorUserId = mentorUserIdByMentorId.get(r.mentor_id) ?? "";
+    return {
+      id: r.id,
+      otherUserId: mentorUserId,
+      otherDisplayName: nameByUserId.get(mentorUserId) ?? "Mentor",
+      message: r.message,
+      status: r.status,
+      scheduledAt: r.scheduled_at,
+      joinUrl: r.join_url,
+      createdAt: r.created_at,
+    };
+  });
+}
+
+// The signed-in mentor's own incoming requests — every member who's
+// reached out to them, newest first.
+export async function getMentorInbox(): Promise<MentorshipRequestItem[] | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return null;
+
+  const { data: mentor } = await supabase
+    .from("mentors")
+    .select("id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (!mentor) return [];
+
+  const { data: requests } = await supabase
+    .from("mentorship_requests")
+    .select("id, member_id, message, status, scheduled_at, join_url, created_at")
+    .eq("mentor_id", mentor.id)
+    .order("created_at", { ascending: false });
+
+  if (!requests || requests.length === 0) return [];
+
+  const memberIds = Array.from(new Set(requests.map((r) => r.member_id)));
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, display_name")
+    .in("id", memberIds);
+
+  const nameByUserId = new Map((profiles ?? []).map((p) => [p.id, p.display_name]));
+
+  return requests.map((r) => ({
+    id: r.id,
+    otherUserId: r.member_id,
+    otherDisplayName: nameByUserId.get(r.member_id) ?? "Member",
+    message: r.message,
+    status: r.status,
+    scheduledAt: r.scheduled_at,
+    joinUrl: r.join_url,
+    createdAt: r.created_at,
+  }));
+}
+
+export async function confirmMentorshipRequest(
+  requestId: string,
+  scheduledAt: string,
+  joinUrl: string
+): Promise<MentorActionResult> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("confirm_mentorship_request", {
+    p_request_id: requestId,
+    p_scheduled_at: scheduledAt,
+    p_join_url: joinUrl,
+  });
+
+  if (error) return { error: "Could not confirm that request. Try again." };
+  return { error: undefined };
+}
+
+export async function declineMentorshipRequest(requestId: string): Promise<MentorActionResult> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("decline_mentorship_request", {
+    p_request_id: requestId,
+  });
+
+  if (error) return { error: "Could not decline that request. Try again." };
+  return { error: undefined };
+}
+
+export async function completeMentorshipRequest(requestId: string): Promise<MentorActionResult> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("complete_mentorship_request", {
+    p_request_id: requestId,
+  });
+
+  if (error) return { error: "Could not mark that session complete. Try again." };
+  return { error: undefined };
+}
+
+export async function cancelMentorshipRequest(requestId: string): Promise<MentorActionResult> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("cancel_mentorship_request", {
+    p_request_id: requestId,
+  });
+
+  if (error) return { error: "Could not cancel that session. Try again." };
+  return { error: undefined };
+}
+
 export async function requestMentorship(
   mentorId: string,
   message: string

@@ -1,11 +1,15 @@
 import Link from "next/link";
-import { getMentorDirectory } from "@/lib/mentors";
+import { getMentorDirectory, getMyMentorshipRequests } from "@/lib/mentors";
 import { Card } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
+import { MyMentorshipRequests } from "@/components/mentors/MyMentorshipRequests";
 
 export default async function MentorsPage() {
-  const mentors = await getMentorDirectory();
+  const [mentors, myRequests] = await Promise.all([
+    getMentorDirectory(),
+    getMyMentorshipRequests(),
+  ]);
 
   if (!mentors) {
     return null;
@@ -27,6 +31,10 @@ export default async function MentorsPage() {
           Become a mentor →
         </Link>
       </div>
+
+      {myRequests && myRequests.length > 0 && (
+        <MyMentorshipRequests requests={myRequests} />
+      )}
 
       {mentors.length === 0 ? (
         <Card>

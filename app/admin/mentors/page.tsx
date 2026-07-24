@@ -1,23 +1,33 @@
+import Link from "next/link";
 import { getMentorsAdmin } from "@/lib/admin";
+import { getMentorLoad } from "@/lib/mentor-analytics";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/cn";
 import { approveMentor, deactivateMentor } from "./actions";
 
 export default async function AdminMentorsPage() {
-  const mentors = await getMentorsAdmin();
+  const [mentors, load] = await Promise.all([getMentorsAdmin(), getMentorLoad()]);
   const pending = mentors.filter((m) => !m.isApproved);
   const approved = mentors.filter((m) => m.isApproved);
 
   return (
     <div className="space-y-10">
-      <div>
-        <h1 className="font-display text-2xl text-paper">Mentors</h1>
-        <p className="mt-1 text-sm text-stone">
-          Approve applications and manage the mentor directory. Assign a
-          mentor to a teaching track via the teaching_categories.mentor_id
-          column directly for now.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display text-2xl text-paper">Mentors</h1>
+          <p className="mt-1 text-sm text-stone">
+            Approve applications and manage the mentor directory. Assign a
+            mentor to a teaching track via the teaching_categories.mentor_id
+            column directly for now.
+          </p>
+        </div>
+        <Link
+          href="/admin/mentors/analytics"
+          className="text-xs text-stone transition-colors hover:text-gold"
+        >
+          Analytics →
+        </Link>
       </div>
 
       <div className="space-y-4">
@@ -71,7 +81,14 @@ export default async function AdminMentorsPage() {
                 >
                   <div>
                     <p className="text-sm text-paper">{mentor.displayName}</p>
-                    <p className="text-xs text-stone">{mentor.headline}</p>
+                    <p className="text-xs text-stone">
+                      {mentor.headline}
+                      {(() => {
+                        const l = load.get(mentor.id);
+                        if (!l || (l.pendingCount === 0 && l.confirmedCount === 0)) return null;
+                        return ` · ${l.pendingCount} pending, ${l.confirmedCount} upcoming`;
+                      })()}
+                    </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge
