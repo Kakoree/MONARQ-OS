@@ -1,6 +1,7 @@
 import { getChallenges } from "@/lib/challenges";
 import { Card } from "@/components/ui/Card";
 import { ChallengeCard } from "@/components/challenges/ChallengeCard";
+import { Reveal } from "@/components/motion/Reveal";
 
 export default async function ChallengesPage() {
   const challenges = await getChallenges();
@@ -26,8 +27,10 @@ export default async function ChallengesPage() {
         </Card>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
-          {challenges.map((challenge) => (
-            <ChallengeCard key={challenge.id} challenge={challenge} />
+          {challenges.map((challenge, index) => (
+            <Reveal key={challenge.id} delay={index * 0.04}>
+              <ChallengeCard challenge={challenge} />
+            </Reveal>
           ))}
         </div>
       )}

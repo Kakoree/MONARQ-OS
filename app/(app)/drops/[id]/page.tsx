@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { getDrop } from "@/lib/drops";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { buttonClassName } from "@/components/ui/Button";
+import { buttonClassName } from "@/components/ui/buttonClassName";
 import { formatPrice } from "@/lib/format";
 import type { DropStatus } from "@/lib/drops";
 

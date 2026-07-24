@@ -1,6 +1,7 @@
 import { getDrops } from "@/lib/drops";
 import { Card } from "@/components/ui/Card";
 import { DropCard } from "@/components/drops/DropCard";
+import { Reveal } from "@/components/motion/Reveal";
 
 export default async function DropsPage() {
   const drops = await getDrops();
@@ -24,8 +25,10 @@ export default async function DropsPage() {
         </Card>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {drops.map((drop) => (
-            <DropCard key={drop.id} drop={drop} />
+          {drops.map((drop, index) => (
+            <Reveal key={drop.id} delay={index * 0.04}>
+              <DropCard drop={drop} />
+            </Reveal>
           ))}
         </div>
       )}

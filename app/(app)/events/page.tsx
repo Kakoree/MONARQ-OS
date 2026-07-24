@@ -1,6 +1,7 @@
 import { getEvents } from "@/lib/events";
 import { Card } from "@/components/ui/Card";
 import { EventCard } from "@/components/events/EventCard";
+import { Reveal } from "@/components/motion/Reveal";
 
 export default async function EventsPage() {
   const events = await getEvents();
@@ -33,8 +34,10 @@ export default async function EventsPage() {
           </Card>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
-            {upcoming.map((event) => (
-              <EventCard key={event.id} event={event} />
+            {upcoming.map((event, index) => (
+              <Reveal key={event.id} delay={index * 0.04}>
+                <EventCard event={event} />
+              </Reveal>
             ))}
           </div>
         )}
@@ -46,8 +49,10 @@ export default async function EventsPage() {
             Past
           </h2>
           <div className="grid gap-3 sm:grid-cols-2">
-            {past.map((event) => (
-              <EventCard key={event.id} event={event} />
+            {past.map((event, index) => (
+              <Reveal key={event.id} delay={index * 0.04}>
+                <EventCard event={event} />
+              </Reveal>
             ))}
           </div>
         </div>

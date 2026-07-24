@@ -1,4 +1,8 @@
+"use client";
+
+import { useRef } from "react";
 import { Badge } from "@/components/ui/Badge";
+import { HoldButton } from "@/components/kokonutui/HoldButton";
 import { setMemberStatus } from "./actions";
 import type { AdminMemberRow } from "@/lib/admin";
 import { cn } from "@/lib/cn";
@@ -10,6 +14,10 @@ export function MemberRow({
   member: AdminMemberRow;
   isSelf: boolean;
 }) {
+  const activateFormRef = useRef<HTMLFormElement>(null);
+  const suspendFormRef = useRef<HTMLFormElement>(null);
+  const revokeFormRef = useRef<HTMLFormElement>(null);
+
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
       <div>
@@ -29,7 +37,10 @@ export function MemberRow({
         {!isSelf && (
           <div className="flex gap-2">
             {member.status !== "active" && (
-              <form action={setMemberStatus.bind(null, member.userId, "active")}>
+              <form
+                ref={activateFormRef}
+                action={setMemberStatus.bind(null, member.userId, "active")}
+              >
                 <button
                   type="submit"
                   className="text-xs text-stone transition-colors hover:text-gold"
@@ -40,24 +51,26 @@ export function MemberRow({
             )}
             {member.status !== "suspended" && (
               <form
+                ref={suspendFormRef}
                 action={setMemberStatus.bind(null, member.userId, "suspended")}
               >
-                <button
-                  type="submit"
-                  className="text-xs text-stone transition-colors hover:text-danger"
-                >
-                  Suspend
-                </button>
+                <HoldButton
+                  idleLabel="Suspend"
+                  holdingLabel="Keep holding…"
+                  onConfirm={() => suspendFormRef.current?.requestSubmit()}
+                />
               </form>
             )}
             {member.status !== "revoked" && (
-              <form action={setMemberStatus.bind(null, member.userId, "revoked")}>
-                <button
-                  type="submit"
-                  className="text-xs text-stone transition-colors hover:text-danger"
-                >
-                  Revoke
-                </button>
+              <form
+                ref={revokeFormRef}
+                action={setMemberStatus.bind(null, member.userId, "revoked")}
+              >
+                <HoldButton
+                  idleLabel="Revoke"
+                  holdingLabel="Keep holding…"
+                  onConfirm={() => revokeFormRef.current?.requestSubmit()}
+                />
               </form>
             )}
           </div>

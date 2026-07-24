@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
+import { AnimatePresence, motion } from "motion/react";
 import {
   enterWithAccessCode,
   type AccessCodeEntryState,
@@ -45,7 +46,19 @@ export default function LoginPage() {
           <Button type="submit" className="w-full" disabled={pending}>
             {pending ? "Checking..." : "Continue"}
           </Button>
-          {state?.error && <p className="text-sm text-danger">{state.error}</p>}
+          <AnimatePresence>
+            {state?.error && (
+              <motion.p
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="text-sm text-danger"
+              >
+                {state.error}
+              </motion.p>
+            )}
+          </AnimatePresence>
         </form>
         <div className="mt-6 border-t border-line pt-4 text-center">
           <Link

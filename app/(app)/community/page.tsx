@@ -1,6 +1,7 @@
 import { getFeed } from "@/lib/community";
 import { Card } from "@/components/ui/Card";
 import { PostCard } from "@/components/community/PostCard";
+import { Reveal } from "@/components/motion/Reveal";
 import { CreatePostForm } from "./CreatePostForm";
 
 export default async function CommunityPage() {
@@ -29,8 +30,10 @@ export default async function CommunityPage() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {posts.map((post) => (
-            <PostCard key={post.id} post={post} />
+          {posts.map((post, index) => (
+            <Reveal key={post.id} delay={index * 0.03}>
+              <PostCard post={post} />
+            </Reveal>
           ))}
         </div>
       )}

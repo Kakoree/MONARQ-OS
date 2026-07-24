@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { redeemAccessCode, type RedeemState } from "./actions";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -28,7 +29,19 @@ export function OnboardingForm({ defaultCode }: { defaultCode?: string }) {
       <Button type="submit" disabled={pending} className="w-full">
         {pending ? "Checking..." : "Redeem code"}
       </Button>
-      {state?.error && <p className="text-sm text-danger">{state.error}</p>}
+      <AnimatePresence>
+        {state?.error && (
+          <motion.p
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="text-sm text-danger"
+          >
+            {state.error}
+          </motion.p>
+        )}
+      </AnimatePresence>
     </form>
   );
 }

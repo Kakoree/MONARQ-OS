@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion } from "motion/react";
 import { NAV_ITEMS } from "@/lib/nav";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/cn";
@@ -52,8 +53,17 @@ export function NavList({
                 : "text-paper/80 hover:bg-surface-raised hover:text-paper"
             )}
           >
-            {isActive && orientation === "vertical" && (
-              <span className="absolute left-0 top-1/2 h-4 w-[2px] -translate-y-1/2 rounded-full bg-gold" />
+            {isActive && (
+              <motion.span
+                layoutId={`nav-indicator-${orientation}`}
+                transition={{ type: "spring", stiffness: 500, damping: 40 }}
+                className={cn(
+                  "absolute rounded-full bg-gold",
+                  orientation === "vertical"
+                    ? "left-0 top-1/2 h-4 w-[2px] -translate-y-1/2"
+                    : "inset-x-3 bottom-0 h-[2px]"
+                )}
+              />
             )}
             {item.label}
           </Link>

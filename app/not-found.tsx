@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
-import { buttonClassName } from "@/components/ui/Button";
+import { buttonClassName } from "@/components/ui/buttonClassName";
 
 // Standalone (no AppShell) — this can be hit before authentication or from
 // the admin gate's notFound(), so it can't assume any particular layout is

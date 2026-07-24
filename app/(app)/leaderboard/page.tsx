@@ -1,6 +1,7 @@
 import { getLeaderboard } from "@/lib/leaderboard";
 import { getCurrentMembership } from "@/lib/membership";
 import { Card } from "@/components/ui/Card";
+import { Reveal } from "@/components/motion/Reveal";
 import { cn } from "@/lib/cn";
 
 export default async function LeaderboardPage() {
@@ -32,35 +33,36 @@ export default async function LeaderboardPage() {
             {entries.map((entry, index) => {
               const isSelf = entry.userId === user?.id;
               return (
-                <div
-                  key={entry.userId}
-                  className={cn(
-                    "flex items-center justify-between px-6 py-4",
-                    isSelf ? "bg-surface-raised" : "bg-surface"
-                  )}
-                >
-                  <div className="flex items-center gap-4">
-                    <span className="w-6 text-sm text-stone">
-                      {index + 1}
-                    </span>
-                    <span
-                      className={cn(
-                        "text-sm",
-                        isSelf ? "text-gold" : "text-paper"
-                      )}
-                    >
-                      {entry.displayName}
-                    </span>
+                <Reveal key={entry.userId} delay={index * 0.02}>
+                  <div
+                    className={cn(
+                      "flex items-center justify-between px-6 py-4",
+                      isSelf ? "bg-surface-raised" : "bg-surface"
+                    )}
+                  >
+                    <div className="flex items-center gap-4">
+                      <span className="w-6 text-sm text-stone">
+                        {index + 1}
+                      </span>
+                      <span
+                        className={cn(
+                          "text-sm",
+                          isSelf ? "text-gold" : "text-paper"
+                        )}
+                      >
+                        {entry.displayName}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="text-xs uppercase tracking-wider text-stone">
+                        Level {entry.level}
+                      </span>
+                      <span className="font-display text-lg text-gold">
+                        {entry.totalXp} XP
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <span className="text-xs uppercase tracking-wider text-stone">
-                      Level {entry.level}
-                    </span>
-                    <span className="font-display text-lg text-gold">
-                      {entry.totalXp} XP
-                    </span>
-                  </div>
-                </div>
+                </Reveal>
               );
             })}
           </div>
