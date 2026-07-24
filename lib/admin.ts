@@ -54,6 +54,7 @@ export type AdminAccessCode = {
   usesCount: number;
   expiresAt: string | null;
   isActive: boolean;
+  dropId: string | null;
   createdAt: string;
 };
 
@@ -62,7 +63,7 @@ export async function getAccessCodes(): Promise<AdminAccessCode[]> {
 
   const { data } = await supabase
     .from("access_codes")
-    .select("id, code, label, max_uses, uses_count, expires_at, is_active, created_at")
+    .select("id, code, label, max_uses, uses_count, expires_at, is_active, drop_id, created_at")
     .order("created_at", { ascending: false });
 
   return (data ?? []).map((c) => ({
@@ -73,6 +74,7 @@ export async function getAccessCodes(): Promise<AdminAccessCode[]> {
     usesCount: c.uses_count,
     expiresAt: c.expires_at,
     isActive: c.is_active,
+    dropId: c.drop_id,
     createdAt: c.created_at,
   }));
 }
@@ -226,6 +228,62 @@ export async function getMentorsAdmin(): Promise<AdminMentor[]> {
     isAcceptingRequests: m.is_accepting_requests,
     createdAt: m.created_at,
   }));
+}
+
+export type AdminDrop = {
+  id: string;
+  title: string;
+  isKeyDrop: boolean;
+  priceCents: number | null;
+  currency: string;
+  isSoldOut: boolean;
+  isPublished: boolean;
+  availableFrom: string | null;
+  availableUntil: string | null;
+  requiredTierId: string | null;
+  earlyAccessHours: number;
+  createdAt: string;
+};
+
+export async function getDropsAdmin(): Promise<AdminDrop[]> {
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .from("drops")
+    .select(
+      "id, title, is_key_drop, price_cents, currency, is_sold_out, is_published, available_from, available_until, required_tier_id, early_access_hours, created_at"
+    )
+    .order("created_at", { ascending: false });
+
+  return (data ?? []).map((d) => ({
+    id: d.id,
+    title: d.title,
+    isKeyDrop: d.is_key_drop,
+    priceCents: d.price_cents,
+    currency: d.currency,
+    isSoldOut: d.is_sold_out,
+    isPublished: d.is_published,
+    availableFrom: d.available_from,
+    availableUntil: d.available_until,
+    requiredTierId: d.required_tier_id,
+    earlyAccessHours: d.early_access_hours,
+    createdAt: d.created_at,
+  }));
+}
+
+export type DropOption = { id: string; title: string };
+
+// For the access-code form's "link to drop" selector — key drops only,
+// since a linked code is how a key drop's ownership gets claimed.
+export async function getKeyDropOptions(): Promise<DropOption[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("drops")
+    .select("id, title")
+    .eq("is_key_drop", true)
+    .order("created_at", { ascending: false });
+
+  return data ?? [];
 }
 
 export type AuditLogEntry = {

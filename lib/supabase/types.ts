@@ -86,6 +86,7 @@ export interface Database {
           expires_at: string | null;
           is_active: boolean;
           created_by: string | null;
+          drop_id: string | null;
           created_at: string;
         };
         Insert: {
@@ -97,6 +98,7 @@ export interface Database {
           expires_at?: string | null;
           is_active?: boolean;
           created_by?: string | null;
+          drop_id?: string | null;
           created_at?: string;
         };
         Update: {
@@ -108,6 +110,7 @@ export interface Database {
           expires_at?: string | null;
           is_active?: boolean;
           created_by?: string | null;
+          drop_id?: string | null;
           created_at?: string;
         };
         Relationships: [];
@@ -501,6 +504,8 @@ export interface Database {
           available_from: string | null;
           available_until: string | null;
           is_published: boolean;
+          required_tier_id: string | null;
+          early_access_hours: number;
           created_at: string;
         };
         Insert: {
@@ -516,6 +521,8 @@ export interface Database {
           available_from?: string | null;
           available_until?: string | null;
           is_published?: boolean;
+          required_tier_id?: string | null;
+          early_access_hours?: number;
           created_at?: string;
         };
         Update: {
@@ -531,6 +538,8 @@ export interface Database {
           available_from?: string | null;
           available_until?: string | null;
           is_published?: boolean;
+          required_tier_id?: string | null;
+          early_access_hours?: number;
           created_at?: string;
         };
         Relationships: [];
@@ -811,6 +820,30 @@ export interface Database {
           join_url?: string | null;
           created_at?: string;
           responded_at?: string | null;
+        };
+        Relationships: [];
+      };
+      drop_claims: {
+        Row: {
+          id: string;
+          user_id: string;
+          drop_id: string;
+          access_code_id: string | null;
+          claimed_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          drop_id: string;
+          access_code_id?: string | null;
+          claimed_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          drop_id?: string;
+          access_code_id?: string | null;
+          claimed_at?: string;
         };
         Relationships: [];
       };

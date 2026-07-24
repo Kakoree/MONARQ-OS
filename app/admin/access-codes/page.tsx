@@ -1,4 +1,4 @@
-import { getAccessCodes } from "@/lib/admin";
+import { getAccessCodes, getKeyDropOptions } from "@/lib/admin";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { CreateAccessCodeForm } from "./CreateAccessCodeForm";
@@ -6,7 +6,8 @@ import { deactivateAccessCode } from "./actions";
 import { cn } from "@/lib/cn";
 
 export default async function AdminAccessCodesPage() {
-  const codes = await getAccessCodes();
+  const [codes, dropOptions] = await Promise.all([getAccessCodes(), getKeyDropOptions()]);
+  const dropTitleById = new Map(dropOptions.map((d) => [d.id, d.title]));
 
   return (
     <div className="space-y-6">
@@ -17,7 +18,7 @@ export default async function AdminAccessCodesPage() {
         </p>
       </div>
 
-      <CreateAccessCodeForm />
+      <CreateAccessCodeForm dropOptions={dropOptions} />
 
       {codes.length === 0 ? (
         <Card>
@@ -44,6 +45,8 @@ export default async function AdminAccessCodesPage() {
                     {code.usesCount}/{code.maxUses} used
                     {code.expiresAt &&
                       ` · expires ${new Date(code.expiresAt).toLocaleDateString("en-US")}`}
+                    {code.dropId &&
+                      ` · claims ${dropTitleById.get(code.dropId) ?? "a drop"}`}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">

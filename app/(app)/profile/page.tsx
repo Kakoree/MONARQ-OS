@@ -1,9 +1,11 @@
 import { getOwnProfile } from "@/lib/profile";
 import { getChallenges } from "@/lib/challenges";
+import { getOwnedDrops } from "@/lib/drops";
 import { Card } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
 import { TierBadge } from "@/components/ui/TierBadge";
 import { MilestonesList } from "@/components/home/MilestonesList";
+import { OwnedDropsList } from "@/components/profile/OwnedDropsList";
 import { SecureAccountCard } from "@/components/profile/SecureAccountCard";
 import { ProfileForm } from "./ProfileForm";
 import { AvatarUploadForm } from "./AvatarUploadForm";
@@ -14,6 +16,8 @@ export default async function ProfilePage() {
   if (!profile) {
     return null;
   }
+
+  const ownedDrops = await getOwnedDrops(profile.id);
 
   return (
     <div className="max-w-2xl space-y-8">
@@ -58,6 +62,15 @@ export default async function ProfilePage() {
         </p>
         <div className="mt-3">
           <MilestonesList challenges={challenges ?? []} />
+        </div>
+      </Card>
+
+      <Card>
+        <p className="text-xs uppercase tracking-wider text-stone">
+          Owned drops
+        </p>
+        <div className="mt-3">
+          <OwnedDropsList drops={ownedDrops} />
         </div>
       </Card>
     </div>

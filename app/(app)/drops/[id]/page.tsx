@@ -7,6 +7,7 @@ import { formatPrice } from "@/lib/format";
 import type { DropStatus } from "@/lib/drops";
 
 const STATUS_LABEL: Record<DropStatus, string> = {
+  locked: "Tier-gated",
   upcoming: "Upcoming",
   live: "Available",
   ended: "Ended",
@@ -43,9 +44,10 @@ export default async function DropDetailPage({
       <div>
         <div className="flex items-center gap-3">
           <h1 className="font-display text-3xl text-paper">{drop.title}</h1>
-          {drop.isKeyDrop && (
-            <Badge className="border-gold/40 text-gold">Key drop</Badge>
+          {drop.isOwned && (
+            <Badge className="border-gold/40 text-gold">You own this</Badge>
           )}
+          {drop.isKeyDrop && <Badge>Key drop</Badge>}
         </div>
         <div className="mt-2 flex items-center gap-3">
           {drop.priceCents != null && (
@@ -55,6 +57,17 @@ export default async function DropDetailPage({
           )}
           <Badge>{STATUS_LABEL[drop.status]}</Badge>
         </div>
+        {drop.requiredTierName && (
+          <p className="mt-2 text-sm text-stone">
+            {drop.requiredTierName}+ members get {drop.earlyAccessHours}h early
+            access
+            {drop.publicAvailableFrom &&
+              ` before it opens to everyone on ${new Date(
+                drop.publicAvailableFrom
+              ).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}`}
+            .
+          </p>
+        )}
       </div>
 
       <Card>
@@ -66,9 +79,9 @@ export default async function DropDetailPage({
       {drop.isKeyDrop && (
         <Card>
           <p className="text-sm text-stone">
-            Key drops include an access code. You&apos;ll receive it after
-            purchase — redeem it the same way any invite code is redeemed to
-            activate membership access.
+            {drop.isOwned
+              ? "You've claimed this key — it's redeemed and linked to your account."
+              : "Key drops include an access code. You'll receive it after purchase — redeem it the same way any invite code is redeemed, and it'll be linked to your account automatically."}
           </p>
         </Card>
       )}
@@ -85,6 +98,8 @@ export default async function DropDetailPage({
           </a>
         ) : (
           <p className="text-sm text-stone">
+            {drop.status === "locked" &&
+              `This drop is reserved for ${drop.requiredTierName}+ members right now.`}
             {drop.status === "upcoming" && "This drop isn't available yet."}
             {drop.status === "ended" && "This drop has ended."}
             {drop.status === "sold_out" && "This drop is sold out."}

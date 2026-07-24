@@ -9,6 +9,7 @@ import { cn } from "@/lib/cn";
 import type { DropSummary } from "@/lib/drops";
 
 const STATUS_LABEL: Record<DropSummary["status"], string> = {
+  locked: "Tier-gated",
   upcoming: "Upcoming",
   live: "Available",
   ended: "Ended",
@@ -16,7 +17,8 @@ const STATUS_LABEL: Record<DropSummary["status"], string> = {
 };
 
 export function DropCard({ drop }: { drop: DropSummary }) {
-  const isInactive = drop.status === "ended" || drop.status === "sold_out";
+  const isInactive =
+    drop.status === "ended" || drop.status === "sold_out" || drop.status === "locked";
 
   return (
     <InteractiveCard className="h-full">
@@ -39,11 +41,19 @@ export function DropCard({ drop }: { drop: DropSummary }) {
           )}
           <div className="flex items-start justify-between gap-2">
             <p className="text-sm font-medium text-paper">{drop.title}</p>
-            {drop.isKeyDrop && (
-              <Badge className="border-gold/40 text-gold">Key drop</Badge>
-            )}
+            <div className="flex shrink-0 gap-1.5">
+              {drop.isOwned && (
+                <Badge className="border-gold/40 text-gold">Owned</Badge>
+              )}
+              {drop.isKeyDrop && <Badge>Key drop</Badge>}
+            </div>
           </div>
           <p className="line-clamp-2 text-sm text-stone">{drop.description}</p>
+          {drop.requiredTierName && (
+            <p className="text-xs text-stone">
+              {drop.requiredTierName}+ get {drop.earlyAccessHours}h early access
+            </p>
+          )}
           <div className="flex items-center justify-between">
             {drop.priceCents != null && (
               <span className="text-sm text-paper">

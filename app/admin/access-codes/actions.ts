@@ -20,6 +20,7 @@ export async function createAccessCode(
   const code = String(formData.get("code") ?? "").trim().toUpperCase();
   const label = String(formData.get("label") ?? "").trim();
   const maxUses = Number(formData.get("max_uses") ?? 1);
+  const dropId = String(formData.get("drop_id") ?? "").trim();
 
   if (!code) {
     return { error: "Enter a code." };
@@ -31,7 +32,13 @@ export async function createAccessCode(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("access_codes")
-    .insert({ code, label: label || null, max_uses: maxUses, created_by: admin.id })
+    .insert({
+      code,
+      label: label || null,
+      max_uses: maxUses,
+      created_by: admin.id,
+      drop_id: dropId || null,
+    })
     .select("id")
     .single();
 

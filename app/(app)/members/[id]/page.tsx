@@ -1,11 +1,13 @@
 import { notFound } from "next/navigation";
 import { getMemberProfile } from "@/lib/profile";
 import { getConnectionState } from "@/lib/connections";
+import { getOwnedDrops } from "@/lib/drops";
 import { Card } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
 import { TierBadge } from "@/components/ui/TierBadge";
 import { ConnectButton } from "@/components/members/ConnectButton";
 import { ReportMemberForm } from "@/components/members/ReportMemberForm";
+import { OwnedDropsList } from "@/components/profile/OwnedDropsList";
 
 export default async function MemberProfilePage({
   params,
@@ -21,6 +23,8 @@ export default async function MemberProfilePage({
   if (!member) {
     notFound();
   }
+
+  const ownedDrops = await getOwnedDrops(id);
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -48,6 +52,17 @@ export default async function MemberProfilePage({
           <ReportMemberForm reportedUserId={id} />
         </div>
       </Card>
+
+      {ownedDrops.length > 0 && (
+        <Card>
+          <p className="text-xs uppercase tracking-wider text-stone">
+            Owned drops
+          </p>
+          <div className="mt-3">
+            <OwnedDropsList drops={ownedDrops} />
+          </div>
+        </Card>
+      )}
     </div>
   );
 }
