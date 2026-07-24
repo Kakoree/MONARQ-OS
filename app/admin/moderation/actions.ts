@@ -28,3 +28,24 @@ export async function removePost(postId: string) {
   revalidatePath("/admin/moderation");
   revalidatePath("/community");
 }
+
+export async function resolveReport(reportId: string, status: "resolved" | "dismissed") {
+  const admin = await requireAdmin();
+  if (!admin) {
+    redirect("/login");
+  }
+
+  const supabase = await createClient();
+  await supabase
+    .from("reports")
+    .update({ status, resolved_at: new Date().toISOString(), resolved_by: admin.id })
+    .eq("id", reportId);
+
+  await logAdminAction({
+    action: status === "resolved" ? "report_resolved" : "report_dismissed",
+    targetTable: "reports",
+    targetId: reportId,
+  });
+
+  revalidatePath("/admin/moderation");
+}

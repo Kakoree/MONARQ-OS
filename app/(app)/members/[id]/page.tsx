@@ -1,8 +1,11 @@
 import { notFound } from "next/navigation";
 import { getMemberProfile } from "@/lib/profile";
+import { getConnectionState } from "@/lib/connections";
 import { Card } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
 import { TierBadge } from "@/components/ui/TierBadge";
+import { ConnectButton } from "@/components/members/ConnectButton";
+import { ReportMemberForm } from "@/components/members/ReportMemberForm";
 
 export default async function MemberProfilePage({
   params,
@@ -10,7 +13,10 @@ export default async function MemberProfilePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const member = await getMemberProfile(id);
+  const [member, { state: connectionState }] = await Promise.all([
+    getMemberProfile(id),
+    getConnectionState(id),
+  ]);
 
   if (!member) {
     notFound();
@@ -37,6 +43,10 @@ export default async function MemberProfilePage({
           </div>
         </div>
         {member.bio && <p className="text-sm text-stone">{member.bio}</p>}
+        <div className="flex items-center justify-between pt-1">
+          <ConnectButton recipientId={id} initialState={connectionState} />
+          <ReportMemberForm reportedUserId={id} />
+        </div>
       </Card>
     </div>
   );

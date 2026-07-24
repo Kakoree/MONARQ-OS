@@ -4,6 +4,8 @@
 
 export type MembershipStatus = "pending" | "active" | "suspended" | "revoked";
 export type MemberRole = "guest" | "member" | "moderator" | "admin";
+export type ConnectionStatus = "pending" | "accepted" | "declined";
+export type ReportStatus = "open" | "resolved" | "dismissed";
 
 export interface Database {
   public: {
@@ -665,6 +667,69 @@ export interface Database {
         };
         Relationships: [];
       };
+      connections: {
+        Row: {
+          id: string;
+          requester_id: string;
+          recipient_id: string;
+          status: ConnectionStatus;
+          created_at: string;
+          responded_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          requester_id: string;
+          recipient_id: string;
+          status?: ConnectionStatus;
+          created_at?: string;
+          responded_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          requester_id?: string;
+          recipient_id?: string;
+          status?: ConnectionStatus;
+          created_at?: string;
+          responded_at?: string | null;
+        };
+        Relationships: [];
+      };
+      reports: {
+        Row: {
+          id: string;
+          reporter_id: string;
+          reported_user_id: string;
+          reason: string;
+          context: string | null;
+          status: ReportStatus;
+          created_at: string;
+          resolved_at: string | null;
+          resolved_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          reporter_id: string;
+          reported_user_id: string;
+          reason: string;
+          context?: string | null;
+          status?: ReportStatus;
+          created_at?: string;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+        };
+        Update: {
+          id?: string;
+          reporter_id?: string;
+          reported_user_id?: string;
+          reason?: string;
+          context?: string | null;
+          status?: ReportStatus;
+          created_at?: string;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+        };
+        Relationships: [];
+      };
       habit_grace_tokens: {
         Row: {
           id: string;
@@ -732,10 +797,19 @@ export interface Database {
         Args: { p_challenge_id: string };
         Returns: { completed_count: number; active_member_count: number }[];
       };
+      request_connection: {
+        Args: { p_recipient_id: string };
+        Returns: string;
+      };
+      respond_connection: {
+        Args: { p_connection_id: string; p_accept: boolean };
+        Returns: boolean;
+      };
     };
     Enums: {
       membership_status: MembershipStatus;
       member_role: MemberRole;
+      connection_status: ConnectionStatus;
     };
   };
 }

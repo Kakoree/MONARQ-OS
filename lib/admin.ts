@@ -139,6 +139,53 @@ export async function getChallengesAdmin(): Promise<AdminChallenge[]> {
   }));
 }
 
+export type AdminReport = {
+  id: string;
+  reporterName: string;
+  reportedName: string;
+  reportedUserId: string;
+  reason: string;
+  context: string | null;
+  status: "open" | "resolved" | "dismissed";
+  createdAt: string;
+};
+
+export async function getReports(status: "open" | "all" = "open"): Promise<AdminReport[]> {
+  const supabase = await createClient();
+
+  let query = supabase
+    .from("reports")
+    .select("id, reporter_id, reported_user_id, reason, context, status, created_at")
+    .order("created_at", { ascending: false });
+
+  if (status === "open") {
+    query = query.eq("status", "open");
+  }
+
+  const { data: reports } = await query;
+
+  const userIds = Array.from(
+    new Set((reports ?? []).flatMap((r) => [r.reporter_id, r.reported_user_id]))
+  );
+
+  const { data: profiles } = userIds.length
+    ? await supabase.from("profiles").select("id, display_name").in("id", userIds)
+    : { data: [] as { id: string; display_name: string | null }[] };
+
+  const nameById = new Map((profiles ?? []).map((p) => [p.id, p.display_name]));
+
+  return (reports ?? []).map((r) => ({
+    id: r.id,
+    reporterName: nameById.get(r.reporter_id) ?? "Member",
+    reportedName: nameById.get(r.reported_user_id) ?? "Member",
+    reportedUserId: r.reported_user_id,
+    reason: r.reason,
+    context: r.context,
+    status: r.status as "open" | "resolved" | "dismissed",
+    createdAt: r.created_at,
+  }));
+}
+
 export type AuditLogEntry = {
   id: string;
   actorName: string;

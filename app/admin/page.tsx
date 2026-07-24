@@ -7,6 +7,7 @@ import {
   getChallengeCompletionRate,
   getRecentActivity,
   getAccessCodeSummary,
+  getConnectionStats,
 } from "@/lib/analytics";
 import { Card } from "@/components/ui/Card";
 import { Reveal } from "@/components/motion/Reveal";
@@ -17,13 +18,14 @@ import { RecentActivity } from "@/components/admin/RecentActivity";
 import { AccessCodesSummary } from "@/components/admin/AccessCodesSummary";
 
 export default async function AdminOverviewPage() {
-  const [members, accessCodes, activeThisWeek, completionRate, recentActivity] =
+  const [members, accessCodes, activeThisWeek, completionRate, recentActivity, connectionStats] =
     await Promise.all([
       getAllMembers(),
       getAccessCodes(),
       getActiveMembersThisWeek(7),
       getChallengeCompletionRate(),
       getRecentActivity(6),
+      getConnectionStats(),
     ]);
 
   const breakdown = getMembershipBreakdown(members);
@@ -95,6 +97,19 @@ export default async function AdminOverviewPage() {
             </p>
             <p className="mt-1 text-xs text-stone">
               {completionRate.completed}/{completionRate.total} joined
+            </p>
+          </Card>
+        </Reveal>
+        <Reveal delay={0.18}>
+          <Card>
+            <p className="text-xs uppercase tracking-wider text-stone">
+              Connections
+            </p>
+            <p className="mt-2 font-display text-3xl text-gold">
+              <AnimatedNumber value={connectionStats.accepted} />
+            </p>
+            <p className="mt-1 text-xs text-stone">
+              {connectionStats.pending} pending
             </p>
           </Card>
         </Reveal>

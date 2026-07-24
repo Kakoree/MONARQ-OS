@@ -181,6 +181,25 @@ export async function getRecentActivity(limit = 6): Promise<AuditLogPreviewEntry
   }));
 }
 
+export type ConnectionStats = {
+  accepted: number;
+  pending: number;
+};
+
+// Connection density is the engagement signal Phase 6's plan calls for —
+// how much members are actually reaching each other, not just broadcasting
+// into the feed.
+export async function getConnectionStats(): Promise<ConnectionStats> {
+  const supabase = await createClient();
+
+  const { data } = await supabase.from("connections").select("status");
+
+  return {
+    accepted: (data ?? []).filter((c) => c.status === "accepted").length,
+    pending: (data ?? []).filter((c) => c.status === "pending").length,
+  };
+}
+
 export type AccessCodeSummary = {
   activeCount: number;
   totalRedemptions: number;
