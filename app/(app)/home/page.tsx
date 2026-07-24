@@ -1,6 +1,8 @@
-import { getDailyOS } from "@/lib/habits";
+import { getDailyOS, getCompletionTrend } from "@/lib/habits";
 import { Card } from "@/components/ui/Card";
 import { HabitRow } from "@/components/home/HabitRow";
+import { CompletionRing } from "@/components/home/CompletionRing";
+import { CompletionTrendChart } from "@/components/home/CompletionTrendChart";
 import { Reveal } from "@/components/motion/Reveal";
 import { AnimatedNumber } from "@/components/motion/AnimatedNumber";
 import { AddHabitForm } from "./AddHabitForm";
@@ -13,6 +15,7 @@ export default async function HomePage() {
   }
 
   const { habits, streak, completedTodayCount } = data;
+  const trend = habits.length > 0 ? await getCompletionTrend(14) : null;
 
   return (
     <div className="space-y-8">
@@ -33,17 +36,31 @@ export default async function HomePage() {
           </Card>
         </Reveal>
         <Reveal delay={0.05}>
-          <Card>
+          <Card className="flex items-center justify-between gap-4">
             <p className="text-xs uppercase tracking-wider text-stone">
               Today
             </p>
-            <p className="mt-2 font-display text-4xl text-paper">
-              <AnimatedNumber value={completedTodayCount} />/{habits.length}
-            </p>
-            <p className="mt-1 text-sm text-stone">habits complete</p>
+            {habits.length > 0 ? (
+              <CompletionRing completed={completedTodayCount} total={habits.length} />
+            ) : (
+              <p className="font-display text-4xl text-paper">0/0</p>
+            )}
           </Card>
         </Reveal>
       </div>
+
+      {trend && (
+        <Reveal delay={0.1}>
+          <Card>
+            <p className="text-xs uppercase tracking-wider text-stone">
+              Last 14 days
+            </p>
+            <div className="mt-3">
+              <CompletionTrendChart points={trend} />
+            </div>
+          </Card>
+        </Reveal>
+      )}
 
       <div className="space-y-4">
         <h2 className="text-sm font-medium uppercase tracking-wider text-stone">

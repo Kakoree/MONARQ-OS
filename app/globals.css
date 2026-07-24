@@ -13,6 +13,39 @@
 
   --background: var(--ink);
   --foreground: var(--paper);
+  --border: var(--line);
+  --muted-foreground: var(--stone);
+
+  /* Bklit UI chart theme — mapped onto MONARQ's own tokens rather than
+     the registry's light/dark defaults, so charts render as an extension
+     of the existing ink/gold/paper surface, not a bolted-on SaaS widget. */
+  --chart-background: var(--surface);
+  --chart-foreground: var(--paper);
+  --chart-foreground-muted: var(--stone);
+  --chart-grid: var(--line);
+  --chart-brush-border: var(--line);
+  --chart-label: var(--stone);
+  --chart-crosshair: rgba(184, 154, 94, 0.35);
+  --chart-line-primary: var(--gold);
+  --chart-line-secondary: var(--stone);
+  --chart-tooltip-background: var(--surface-raised);
+  --chart-tooltip-foreground: var(--paper);
+  --chart-tooltip-muted: var(--stone);
+  --chart-marker-background: var(--surface-raised);
+  --chart-marker-border: var(--gold);
+  --chart-marker-foreground: var(--gold);
+  --chart-marker-badge-background: var(--gold-dim);
+  --chart-marker-badge-foreground: var(--gold);
+  --chart-segment-background: var(--surface-raised);
+  --chart-segment-line: var(--line);
+  /* Index-cycled series colors — a restrained gold ramp instead of a
+     categorical rainbow, for the rare chart that doesn't set an explicit
+     per-series color. */
+  --chart-1: var(--gold);
+  --chart-2: rgba(184, 154, 94, 0.7);
+  --chart-3: rgba(184, 154, 94, 0.5);
+  --chart-4: rgba(184, 154, 94, 0.32);
+  --chart-5: var(--stone);
 }
 
 @theme inline {
@@ -27,9 +60,35 @@
   --color-gold: var(--gold);
   --color-gold-dim: var(--gold-dim);
   --color-danger: var(--danger);
+  --color-border: var(--border);
+  --color-muted-foreground: var(--muted-foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-display: var(--font-instrument-serif);
+  --color-chart-background: var(--chart-background);
+  --color-chart-foreground: var(--chart-foreground);
+  --color-chart-foreground-muted: var(--chart-foreground-muted);
+  --color-chart-grid: var(--chart-grid);
+  --color-chart-brush-border: var(--chart-brush-border);
+  --color-chart-label: var(--chart-label);
+  --color-chart-crosshair: var(--chart-crosshair);
+  --color-chart-line-primary: var(--chart-line-primary);
+  --color-chart-line-secondary: var(--chart-line-secondary);
+  --color-chart-tooltip-background: var(--chart-tooltip-background);
+  --color-chart-tooltip-foreground: var(--chart-tooltip-foreground);
+  --color-chart-tooltip-muted: var(--chart-tooltip-muted);
+  --color-chart-marker-background: var(--chart-marker-background);
+  --color-chart-marker-border: var(--chart-marker-border);
+  --color-chart-marker-foreground: var(--chart-marker-foreground);
+  --color-chart-marker-badge-background: var(--chart-marker-badge-background);
+  --color-chart-marker-badge-foreground: var(--chart-marker-badge-foreground);
+  --color-chart-segment-background: var(--chart-segment-background);
+  --color-chart-segment-line: var(--chart-segment-line);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
 }
 
 body {

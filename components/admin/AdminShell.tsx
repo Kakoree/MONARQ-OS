@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 const ADMIN_NAV = [
+  { label: "Overview", href: "/admin" },
   { label: "Members", href: "/admin/members" },
   { label: "Access Codes", href: "/admin/access-codes" },
   { label: "Moderation", href: "/admin/moderation" },
