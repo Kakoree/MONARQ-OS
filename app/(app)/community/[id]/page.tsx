@@ -3,6 +3,7 @@ import { getPost } from "@/lib/community";
 import { getCurrentMembership } from "@/lib/membership";
 import { Card } from "@/components/ui/Card";
 import { ReactionButton } from "@/components/community/ReactionButton";
+import { TierBadge } from "@/components/ui/TierBadge";
 import { formatRelativeTime } from "@/lib/format";
 import { AddCommentForm } from "./AddCommentForm";
 import { DeletePostButton, DeleteCommentButton } from "./ActionButtons";
@@ -26,9 +27,12 @@ export default async function PostDetailPage({
     <div className="max-w-2xl space-y-6">
       <Card className="space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-paper">
-            {post.authorName}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-paper">
+              {post.authorName}
+            </span>
+            <TierBadge tier={post.authorTier} />
+          </div>
           <span className="text-xs text-stone">
             {formatRelativeTime(post.createdAt)}
           </span>

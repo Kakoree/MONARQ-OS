@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getChallenge } from "@/lib/challenges";
+import { getChallenge, getGroupChallengeProgress } from "@/lib/challenges";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { JoinButton, CompleteButton } from "./ActionButtons";
@@ -16,6 +16,10 @@ export default async function ChallengeDetailPage({
     notFound();
   }
 
+  const groupProgress = challenge.isGroup
+    ? await getGroupChallengeProgress(challenge.id)
+    : null;
+
   return (
     <div className="max-w-2xl space-y-6">
       <div>
@@ -29,6 +33,37 @@ export default async function ChallengeDetailPage({
         </div>
         <p className="mt-2 text-sm text-stone">{challenge.description}</p>
       </div>
+
+      {groupProgress && (
+        <Card>
+          <p className="text-xs uppercase tracking-wider text-stone">
+            Shared progress
+          </p>
+          <p className="mt-2 text-sm text-paper">
+            {groupProgress.completedCount} of {groupProgress.activeMemberCount}{" "}
+            active members have completed this.
+          </p>
+          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-line">
+            <div
+              className="h-full bg-gold"
+              style={{
+                width: `${
+                  groupProgress.activeMemberCount > 0
+                    ? Math.min(
+                        100,
+                        Math.round(
+                          (groupProgress.completedCount /
+                            groupProgress.activeMemberCount) *
+                            100
+                        )
+                      )
+                    : 0
+                }%`,
+              }}
+            />
+          </div>
+        </Card>
+      )}
 
       <Card>
         {challenge.isCompleted ? (

@@ -272,6 +272,7 @@ export interface Database {
           starts_at: string | null;
           ends_at: string | null;
           is_published: boolean;
+          is_group: boolean;
           created_at: string;
         };
         Insert: {
@@ -282,6 +283,7 @@ export interface Database {
           starts_at?: string | null;
           ends_at?: string | null;
           is_published?: boolean;
+          is_group?: boolean;
           created_at?: string;
         };
         Update: {
@@ -292,6 +294,7 @@ export interface Database {
           starts_at?: string | null;
           ends_at?: string | null;
           is_published?: boolean;
+          is_group?: boolean;
           created_at?: string;
         };
         Relationships: [];
@@ -724,6 +727,10 @@ export interface Database {
       consume_grace_token: {
         Args: { p_date: string };
         Returns: boolean;
+      };
+      get_group_challenge_progress: {
+        Args: { p_challenge_id: string };
+        Returns: { completed_count: number; active_member_count: number }[];
       };
     };
     Enums: {

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getActiveSeason, getSeasonTierByUserId, type Tier } from "@/lib/seasons";
 
 const FEED_LIMIT = 50;
 
@@ -6,6 +7,7 @@ export type PostSummary = {
   id: string;
   authorId: string;
   authorName: string;
+  authorTier: Tier | null;
   body: string;
   createdAt: string;
   reactionCount: number;
@@ -31,12 +33,16 @@ export async function getFeed(): Promise<PostSummary[] | null> {
 
   const postIds = posts.map((p) => p.id);
   const authorIds = Array.from(new Set(posts.map((p) => p.user_id)));
+  const activeSeason = await getActiveSeason();
 
-  const [{ data: profiles }, { data: reactions }, { data: comments }] =
+  const [{ data: profiles }, { data: reactions }, { data: comments }, tierByUserId] =
     await Promise.all([
       supabase.from("profiles").select("id, display_name").in("id", authorIds),
       supabase.from("reactions").select("post_id, user_id").in("post_id", postIds),
       supabase.from("comments").select("id, post_id").in("post_id", postIds),
+      activeSeason
+        ? getSeasonTierByUserId(activeSeason)
+        : Promise.resolve(new Map<string, Tier | null>()),
     ]);
 
   const nameById = new Map((profiles ?? []).map((p) => [p.id, p.display_name]));
@@ -57,6 +63,7 @@ export async function getFeed(): Promise<PostSummary[] | null> {
     id: p.id,
     authorId: p.user_id,
     authorName: nameById.get(p.user_id) ?? "Member",
+    authorTier: tierByUserId.get(p.user_id) ?? null,
     body: p.body,
     createdAt: p.created_at,
     reactionCount: reactionCounts.get(p.id) ?? 0,
@@ -93,13 +100,18 @@ export async function getPost(id: string): Promise<PostDetail | null> {
 
   if (!post) return null;
 
-  const [{ data: comments }, { data: reactions }] = await Promise.all([
+  const activeSeason = await getActiveSeason();
+
+  const [{ data: comments }, { data: reactions }, tierByUserId] = await Promise.all([
     supabase
       .from("comments")
       .select("id, user_id, body, created_at")
       .eq("post_id", id)
       .order("created_at", { ascending: true }),
     supabase.from("reactions").select("user_id").eq("post_id", id),
+    activeSeason
+      ? getSeasonTierByUserId(activeSeason)
+      : Promise.resolve(new Map<string, Tier | null>()),
   ]);
 
   const authorIds = Array.from(
@@ -116,6 +128,7 @@ export async function getPost(id: string): Promise<PostDetail | null> {
     id: post.id,
     authorId: post.user_id,
     authorName: nameById.get(post.user_id) ?? "Member",
+    authorTier: tierByUserId.get(post.user_id) ?? null,
     body: post.body,
     createdAt: post.created_at,
     reactionCount: (reactions ?? []).length,

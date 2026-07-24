@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { levelForXp } from "@/lib/progression";
+import { getActiveSeason, getSeasonPoints, getSeasonTierByUserId, getTiers, tierForPoints, type Tier } from "@/lib/seasons";
 import type { MembershipStatus, MemberRole } from "@/lib/supabase/types";
 
 export type OwnProfile = {
@@ -7,10 +8,12 @@ export type OwnProfile = {
   displayName: string | null;
   avatarUrl: string | null;
   bio: string | null;
+  identityMarker: string | null;
   status: MembershipStatus;
   role: MemberRole;
   totalXp: number;
   level: number;
+  seasonTier: Tier | null;
   createdAt: string;
   isAnonymous: boolean;
 };
@@ -23,11 +26,11 @@ export async function getOwnProfile(): Promise<OwnProfile | null> {
 
   if (!user) return null;
 
-  const [{ data: profile }, { data: membership }, { data: xpEvents }] =
+  const [{ data: profile }, { data: membership }, { data: xpEvents }, activeSeason] =
     await Promise.all([
       supabase
         .from("profiles")
-        .select("id, display_name, avatar_url, bio, created_at")
+        .select("id, display_name, avatar_url, bio, identity_marker, created_at")
         .eq("id", user.id)
         .maybeSingle(),
       supabase
@@ -36,21 +39,28 @@ export async function getOwnProfile(): Promise<OwnProfile | null> {
         .eq("user_id", user.id)
         .maybeSingle(),
       supabase.from("xp_events").select("amount").eq("user_id", user.id),
+      getActiveSeason(),
     ]);
 
   if (!profile || !membership) return null;
 
   const totalXp = (xpEvents ?? []).reduce((sum, e) => sum + e.amount, 0);
 
+  const seasonTier = activeSeason
+    ? tierForPoints(await getSeasonPoints(user.id, activeSeason), await getTiers())
+    : null;
+
   return {
     id: profile.id,
     displayName: profile.display_name,
     avatarUrl: profile.avatar_url,
     bio: profile.bio,
+    identityMarker: profile.identity_marker,
     status: membership.status,
     role: membership.role,
     totalXp,
     level: levelForXp(totalXp),
+    seasonTier,
     createdAt: profile.created_at,
     isAnonymous: user.is_anonymous ?? false,
   };
@@ -61,8 +71,10 @@ export type MemberCard = {
   displayName: string;
   avatarUrl: string | null;
   bio: string | null;
+  identityMarker: string | null;
   level: number;
   totalXp: number;
+  seasonTier: Tier | null;
 };
 
 export async function getMembers(): Promise<MemberCard[] | null> {
@@ -73,11 +85,18 @@ export async function getMembers(): Promise<MemberCard[] | null> {
 
   if (!user) return null;
 
-  const [{ data: activeIds }, { data: profiles }, { data: xpEvents }] =
+  const activeSeason = await getActiveSeason();
+
+  const [{ data: activeIds }, { data: profiles }, { data: xpEvents }, tierByUserId] =
     await Promise.all([
       supabase.from("active_member_ids").select("user_id"),
-      supabase.from("profiles").select("id, display_name, avatar_url, bio"),
+      supabase
+        .from("profiles")
+        .select("id, display_name, avatar_url, bio, identity_marker"),
       supabase.from("xp_events").select("user_id, amount"),
+      activeSeason
+        ? getSeasonTierByUserId(activeSeason)
+        : Promise.resolve(new Map<string, Tier | null>()),
     ]);
 
   const activeIdSet = new Set((activeIds ?? []).map((a) => a.user_id));
@@ -96,8 +115,10 @@ export async function getMembers(): Promise<MemberCard[] | null> {
         displayName: p.display_name ?? "Member",
         avatarUrl: p.avatar_url,
         bio: p.bio,
+        identityMarker: p.identity_marker,
         level: levelForXp(totalXp),
         totalXp,
+        seasonTier: tierByUserId.get(p.id) ?? null,
       };
     });
 }
@@ -118,10 +139,12 @@ export async function getMemberProfile(id: string): Promise<MemberCard | null> {
 
   if (!activeRow) return null;
 
+  const activeSeason = await getActiveSeason();
+
   const [{ data: profile }, { data: xpEvents }] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id, display_name, avatar_url, bio")
+      .select("id, display_name, avatar_url, bio, identity_marker")
       .eq("id", id)
       .maybeSingle(),
     supabase.from("xp_events").select("amount").eq("user_id", id),
@@ -131,12 +154,18 @@ export async function getMemberProfile(id: string): Promise<MemberCard | null> {
 
   const totalXp = (xpEvents ?? []).reduce((sum, e) => sum + e.amount, 0);
 
+  const seasonTier = activeSeason
+    ? tierForPoints(await getSeasonPoints(id, activeSeason), await getTiers())
+    : null;
+
   return {
     id: profile.id,
     displayName: profile.display_name ?? "Member",
     avatarUrl: profile.avatar_url,
     bio: profile.bio,
+    identityMarker: profile.identity_marker,
     level: levelForXp(totalXp),
     totalXp,
+    seasonTier,
   };
 }

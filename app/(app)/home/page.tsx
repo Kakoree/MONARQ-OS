@@ -7,6 +7,13 @@ import { getFeed } from "@/lib/community";
 import { getCurrentMembership } from "@/lib/membership";
 import { notifyStreakAtRiskOnce } from "@/lib/notifications";
 import { progressToNextLevel } from "@/lib/progression";
+import {
+  getActiveSeason,
+  getSeasonPoints,
+  getTiers,
+  pointsToNextTier,
+  tierForPoints,
+} from "@/lib/seasons";
 import { Card } from "@/components/ui/Card";
 import { HabitRow } from "@/components/home/HabitRow";
 import { CompletionRing } from "@/components/home/CompletionRing";
@@ -15,6 +22,7 @@ import { WeeklyConsistencyChart } from "@/components/home/WeeklyConsistencyChart
 import { StreakDots } from "@/components/home/StreakDots";
 import { PerHabitTrend } from "@/components/home/PerHabitTrend";
 import { AtRiskBanner } from "@/components/home/AtRiskBanner";
+import { SeasonModule } from "@/components/home/SeasonModule";
 import { ProgressOverview } from "@/components/home/ProgressOverview";
 import { MilestonesList } from "@/components/home/MilestonesList";
 import { LeaderboardPreview } from "@/components/home/LeaderboardPreview";
@@ -67,6 +75,22 @@ export default async function HomePage() {
       ? `${streak}-day streak. Keep going.`
       : "Start your streak today.";
 
+  const activeSeason = await getActiveSeason();
+  const seasonModuleData =
+    activeSeason && user
+      ? await (async () => {
+          const [points, tiers] = await Promise.all([
+            getSeasonPoints(user.id, activeSeason),
+            getTiers(),
+          ]);
+          return {
+            points,
+            tier: tierForPoints(points, tiers),
+            nextTier: pointsToNextTier(points, tiers),
+          };
+        })()
+      : null;
+
   return (
     <div className="space-y-8">
       <div className="space-y-2">
@@ -83,6 +107,17 @@ export default async function HomePage() {
         graceTokensAvailable={graceTokensAvailable}
         recoverableDates={recoverableDates}
       />
+
+      {activeSeason && seasonModuleData && (
+        <Card>
+          <SeasonModule
+            season={activeSeason}
+            points={seasonModuleData.points}
+            tier={seasonModuleData.tier}
+            nextTier={seasonModuleData.nextTier}
+          />
+        </Card>
+      )}
 
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-6">
         <Reveal>

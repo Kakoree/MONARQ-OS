@@ -104,6 +104,41 @@ export async function getIdentityMarkersAdmin(): Promise<AdminIdentityMarker[]> 
   }));
 }
 
+export type AdminChallenge = {
+  id: string;
+  title: string;
+  description: string;
+  xpReward: number;
+  startsAt: string | null;
+  endsAt: string | null;
+  isPublished: boolean;
+  isGroup: boolean;
+  createdAt: string;
+};
+
+export async function getChallengesAdmin(): Promise<AdminChallenge[]> {
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .from("challenges")
+    .select(
+      "id, title, description, xp_reward, starts_at, ends_at, is_published, is_group, created_at"
+    )
+    .order("created_at", { ascending: false });
+
+  return (data ?? []).map((c) => ({
+    id: c.id,
+    title: c.title,
+    description: c.description,
+    xpReward: c.xp_reward,
+    startsAt: c.starts_at,
+    endsAt: c.ends_at,
+    isPublished: c.is_published,
+    isGroup: c.is_group,
+    createdAt: c.created_at,
+  }));
+}
+
 export type AuditLogEntry = {
   id: string;
   actorName: string;

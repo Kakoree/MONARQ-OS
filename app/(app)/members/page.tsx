@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getMembers } from "@/lib/profile";
 import { Card } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
+import { TierBadge } from "@/components/ui/TierBadge";
 
 export default async function MembersPage() {
   const members = await getMembers();
@@ -33,11 +34,15 @@ export default async function MembersPage() {
                     size={44}
                   />
                   <div>
-                    <p className="text-sm font-medium text-paper">
-                      {member.displayName}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-paper">
+                        {member.displayName}
+                      </p>
+                      <TierBadge tier={member.seasonTier} />
+                    </div>
                     <p className="text-xs uppercase tracking-wider text-stone">
                       Level {member.level}
+                      {member.identityMarker && ` · ${member.identityMarker}`}
                     </p>
                   </div>
                 </div>

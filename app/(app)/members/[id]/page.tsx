@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getMemberProfile } from "@/lib/profile";
 import { Card } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
+import { TierBadge } from "@/components/ui/TierBadge";
 
 export default async function MemberProfilePage({
   params,
@@ -25,9 +26,13 @@ export default async function MemberProfilePage({
             size={64}
           />
           <div>
-            <p className="text-lg text-paper">{member.displayName}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-lg text-paper">{member.displayName}</p>
+              <TierBadge tier={member.seasonTier} />
+            </div>
             <p className="text-xs uppercase tracking-wider text-stone">
               Level {member.level} · {member.totalXp} XP
+              {member.identityMarker && ` · ${member.identityMarker}`}
             </p>
           </div>
         </div>

@@ -1,12 +1,15 @@
 import { getOwnProfile } from "@/lib/profile";
+import { getChallenges } from "@/lib/challenges";
 import { Card } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
+import { TierBadge } from "@/components/ui/TierBadge";
+import { MilestonesList } from "@/components/home/MilestonesList";
 import { SecureAccountCard } from "@/components/profile/SecureAccountCard";
 import { ProfileForm } from "./ProfileForm";
 import { AvatarUploadForm } from "./AvatarUploadForm";
 
 export default async function ProfilePage() {
-  const profile = await getOwnProfile();
+  const [profile, challenges] = await Promise.all([getOwnProfile(), getChallenges()]);
 
   if (!profile) {
     return null;
@@ -27,11 +30,15 @@ export default async function ProfilePage() {
         <div className="flex items-center gap-4">
           <Avatar url={profile.avatarUrl} name={profile.displayName} size={64} />
           <div>
-            <p className="text-lg text-paper">
-              {profile.displayName ?? "Member"}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-lg text-paper">
+                {profile.displayName ?? "Member"}
+              </p>
+              <TierBadge tier={profile.seasonTier} />
+            </div>
             <p className="text-xs uppercase tracking-wider text-stone">
               Level {profile.level} · {profile.totalXp} XP
+              {profile.identityMarker && ` · ${profile.identityMarker}`}
             </p>
           </div>
         </div>
@@ -43,6 +50,15 @@ export default async function ProfilePage() {
           displayName={profile.displayName ?? ""}
           bio={profile.bio ?? ""}
         />
+      </Card>
+
+      <Card>
+        <p className="text-xs uppercase tracking-wider text-stone">
+          Milestones
+        </p>
+        <div className="mt-3">
+          <MilestonesList challenges={challenges ?? []} />
+        </div>
       </Card>
     </div>
   );
