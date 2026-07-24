@@ -9,6 +9,7 @@ export type ChallengeSummary = {
   endsAt: string | null;
   isJoined: boolean;
   isCompleted: boolean;
+  completedAt: string | null;
 };
 
 export async function getChallenges(): Promise<ChallengeSummary[] | null> {
@@ -43,6 +44,7 @@ export async function getChallenges(): Promise<ChallengeSummary[] | null> {
     endsAt: c.ends_at,
     isJoined: participationByChallenge.has(c.id),
     isCompleted: !!participationByChallenge.get(c.id),
+    completedAt: participationByChallenge.get(c.id) ?? null,
   }));
 }
 
@@ -79,5 +81,6 @@ export async function getChallenge(id: string): Promise<ChallengeSummary | null>
     endsAt: challenge.ends_at,
     isJoined: !!participation,
     isCompleted: !!participation?.completed_at,
+    completedAt: participation?.completed_at ?? null,
   };
 }
