@@ -367,6 +367,60 @@ export async function getKeyDropOptions(): Promise<DropOption[]> {
   return data ?? [];
 }
 
+export type AdminPodMember = {
+  userId: string;
+  displayName: string | null;
+  joinedAt: string;
+};
+
+export type AdminPod = {
+  id: string;
+  name: string;
+  description: string | null;
+  isActive: boolean;
+  createdAt: string;
+  members: AdminPodMember[];
+};
+
+export async function getPodsAdmin(): Promise<AdminPod[]> {
+  const supabase = await createClient();
+
+  const [{ data: pods }, { data: podMembers }] = await Promise.all([
+    supabase
+      .from("pods")
+      .select("id, name, description, is_active, created_at")
+      .order("created_at", { ascending: false }),
+    supabase.from("pod_members").select("pod_id, user_id, joined_at"),
+  ]);
+
+  const userIds = Array.from(new Set((podMembers ?? []).map((m) => m.user_id)));
+  const { data: profiles } = userIds.length
+    ? await supabase.from("profiles").select("id, display_name").in("id", userIds)
+    : { data: [] as { id: string; display_name: string | null }[] };
+
+  const nameById = new Map((profiles ?? []).map((p) => [p.id, p.display_name]));
+
+  const membersByPodId = new Map<string, AdminPodMember[]>();
+  for (const m of podMembers ?? []) {
+    const list = membersByPodId.get(m.pod_id) ?? [];
+    list.push({
+      userId: m.user_id,
+      displayName: nameById.get(m.user_id) ?? null,
+      joinedAt: m.joined_at,
+    });
+    membersByPodId.set(m.pod_id, list);
+  }
+
+  return (pods ?? []).map((p) => ({
+    id: p.id,
+    name: p.name,
+    description: p.description,
+    isActive: p.is_active,
+    createdAt: p.created_at,
+    members: membersByPodId.get(p.id) ?? [],
+  }));
+}
+
 export type AuditLogEntry = {
   id: string;
   actorName: string;

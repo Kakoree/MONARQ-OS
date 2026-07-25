@@ -645,6 +645,59 @@ export type Database = {
         }
         Relationships: []
       }
+      pod_members: {
+        Row: {
+          id: string
+          joined_at: string
+          pod_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          pod_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          pod_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pod_members_pod_id_fkey"
+            columns: ["pod_id"]
+            isOneToOne: false
+            referencedRelation: "pods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pods: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+        }
+        Relationships: []
+      }
       posts: {
         Row: {
           body: string
@@ -1059,8 +1112,18 @@ export type Database = {
           completed_count: number
         }[]
       }
+      get_pod_accountability: {
+        Args: { p_pod_id: string }
+        Returns: {
+          active_habit_count: number
+          activity_dates: string[]
+          checked_in_today: boolean
+          member_id: string
+        }[]
+      }
       grant_grace_token: { Args: { p_source: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
+      is_pod_member: { Args: { p_pod_id: string }; Returns: boolean }
       redeem_access_code: {
         Args: { p_code: string }
         Returns: Database["public"]["Enums"]["membership_status"]

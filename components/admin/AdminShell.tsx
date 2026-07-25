@@ -10,6 +10,7 @@ const ADMIN_NAV = [
   { label: "Teachings", href: "/admin/teachings" },
   { label: "Challenges", href: "/admin/challenges" },
   { label: "Mentors", href: "/admin/mentors" },
+  { label: "Pods", href: "/admin/pods" },
   { label: "Drops", href: "/admin/drops" },
   { label: "Moderation", href: "/admin/moderation" },
   { label: "Audit Log", href: "/admin/audit-log" },
