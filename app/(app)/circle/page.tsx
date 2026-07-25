@@ -70,12 +70,26 @@ export default async function CirclePage() {
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {circle.connections.map((member) => (
-              <Link key={member.connectionId} href={`/members/${member.userId}`}>
-                <Card className="flex items-center gap-3 transition-colors hover:border-gold/40">
+              <Card
+                key={member.connectionId}
+                className="flex items-center justify-between gap-3"
+              >
+                <Link
+                  href={`/members/${member.userId}`}
+                  className="flex min-w-0 items-center gap-3"
+                >
                   <Avatar url={member.avatarUrl} name={member.displayName} size={40} />
-                  <span className="text-sm text-paper">{member.displayName}</span>
-                </Card>
-              </Link>
+                  <span className="truncate text-sm text-paper">
+                    {member.displayName}
+                  </span>
+                </Link>
+                <Link
+                  href={`/circle/${member.userId}`}
+                  className="shrink-0 text-xs text-stone transition-colors hover:text-gold"
+                >
+                  Message
+                </Link>
+              </Card>
             ))}
           </div>
         )}

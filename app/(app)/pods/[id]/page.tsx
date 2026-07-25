@@ -1,9 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPod } from "@/lib/pods";
+import { getPodMessages } from "@/lib/messages";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
+import { MessageThread } from "@/components/messages/MessageThread";
+import { MessageComposer } from "@/components/messages/MessageComposer";
+import { postPodMessageAction, deletePodMessageAction } from "../actions";
 import { cn } from "@/lib/cn";
 
 export default async function PodDetailPage({
@@ -17,6 +21,8 @@ export default async function PodDetailPage({
   if (!pod) {
     notFound();
   }
+
+  const messages = await getPodMessages(id);
 
   return (
     <div className="space-y-8">
@@ -80,6 +86,22 @@ export default async function PodDetailPage({
             ))}
           </div>
         </div>
+      </div>
+
+      <div className="space-y-4">
+        <h2 className="text-sm font-medium uppercase tracking-wider text-stone">
+          Thread
+        </h2>
+        <MessageThread
+          messages={messages}
+          emptyLabel="Nothing here yet. Say something to your pod."
+          onDelete={(messageId) => deletePodMessageAction.bind(null, id, messageId)}
+        />
+        <MessageComposer
+          action={postPodMessageAction.bind(null, id)}
+          placeholder="Message your pod…"
+          submitLabel="Post"
+        />
       </div>
     </div>
   );

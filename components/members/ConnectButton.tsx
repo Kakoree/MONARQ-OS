@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 import { connectAction, type ConnectFormState } from "@/app/(app)/members/[id]/actions";
 import { Button } from "@/components/ui/Button";
 import type { ConnectionState } from "@/lib/connections";
@@ -20,9 +21,17 @@ export function ConnectButton({
 
   if (initialState === "connected") {
     return (
-      <Button variant="secondary" disabled className="cursor-default">
-        Connected
-      </Button>
+      <div className="flex items-center gap-3">
+        <Button variant="secondary" disabled className="cursor-default">
+          Connected
+        </Button>
+        <Link
+          href={`/circle/${recipientId}`}
+          className="text-sm text-stone transition-colors hover:text-gold"
+        >
+          Message
+        </Link>
+      </div>
     );
   }
 
@@ -34,9 +43,9 @@ export function ConnectButton({
     return (
       <p className="text-sm text-stone">
         This member sent you a request — respond from{" "}
-        <a href="/circle" className="text-gold hover:underline">
+        <Link href="/circle" className="text-gold hover:underline">
           your Circle
-        </a>
+        </Link>
         .
       </p>
     );

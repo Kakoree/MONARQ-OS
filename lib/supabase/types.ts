@@ -241,6 +241,30 @@ export type Database = {
         }
         Relationships: []
       }
+      direct_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          recipient_id: string
+          sender_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          recipient_id: string
+          sender_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          recipient_id?: string
+          sender_id?: string
+        }
+        Relationships: []
+      }
       drop_claims: {
         Row: {
           access_code_id: string | null
@@ -707,6 +731,38 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      pod_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          pod_id: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          pod_id: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          pod_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pod_messages_pod_id_fkey"
+            columns: ["pod_id"]
+            isOneToOne: false
+            referencedRelation: "pods"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pod_members: {
         Row: {
@@ -1196,6 +1252,10 @@ export type Database = {
         Returns: Database["public"]["Enums"]["membership_status"]
       }
       request_connection: { Args: { p_recipient_id: string }; Returns: string }
+      send_direct_message: {
+        Args: { p_body: string; p_recipient_id: string }
+        Returns: string
+      }
       respond_connection: {
         Args: { p_accept: boolean; p_connection_id: string }
         Returns: boolean
