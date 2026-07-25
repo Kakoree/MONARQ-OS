@@ -237,7 +237,7 @@ export async function getMonthlyConsistency(): Promise<number | null> {
   return getConsistencyScore(30);
 }
 
-function todayDateString(): string {
+export function todayDateString(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
@@ -255,7 +255,7 @@ function lastNDates(n: number, throughDate: string): string[] {
   return dates;
 }
 
-function computeStreak(distinctDates: Set<string>, today: string): number {
+export function computeStreak(distinctDates: Set<string>, today: string): number {
   let streak = 0;
   const cursor = new Date(`${today}T00:00:00Z`);
 

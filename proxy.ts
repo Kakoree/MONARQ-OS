@@ -10,6 +10,10 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // /api excluded: API routes (e.g. app/api/cron/*) authenticate
+    // themselves and have no user session cookie to refresh — without this
+    // exclusion, unauthenticated requests like a Vercel Cron invocation get
+    // redirected to /login before the route handler ever runs.
+    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
