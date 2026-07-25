@@ -529,6 +529,51 @@ export type Database = {
         }
         Relationships: []
       }
+      mentor_availability_slots: {
+        Row: {
+          booked_request_id: string | null
+          created_at: string
+          duration_minutes: number
+          id: string
+          join_url: string | null
+          mentor_id: string
+          starts_at: string
+        }
+        Insert: {
+          booked_request_id?: string | null
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          join_url?: string | null
+          mentor_id: string
+          starts_at: string
+        }
+        Update: {
+          booked_request_id?: string | null
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          join_url?: string | null
+          mentor_id?: string
+          starts_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentor_availability_slots_booked_request_id_fkey"
+            columns: ["booked_request_id"]
+            isOneToOne: false
+            referencedRelation: "mentorship_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mentor_availability_slots_mentor_id_fkey"
+            columns: ["mentor_id"]
+            isOneToOne: false
+            referencedRelation: "mentors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mentors: {
         Row: {
           approved_at: string | null
@@ -1073,6 +1118,10 @@ export type Database = {
       }
     }
     Functions: {
+      book_mentorship_slot: {
+        Args: { p_message?: string; p_slot_id: string }
+        Returns: string
+      }
       cancel_mentorship_request: {
         Args: { p_request_id: string }
         Returns: boolean

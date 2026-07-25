@@ -171,6 +171,185 @@ export async function updateOwnMentorProfile(params: {
   return { error: undefined };
 }
 
+export type AvailabilitySlot = {
+  id: string;
+  startsAt: string;
+  durationMinutes: number;
+  joinUrl: string | null;
+  isBooked: boolean;
+};
+
+// A slot counts as open again once its booking was cancelled or declined
+// — the same rule book_mentorship_slot() enforces, so what's shown as
+// bookable and what's actually bookable can't drift apart.
+function isSlotOpen(
+  bookedRequestId: string | null,
+  statusByRequestId: Map<string, string>
+): boolean {
+  if (!bookedRequestId) return true;
+  const status = statusByRequestId.get(bookedRequestId);
+  return status === "cancelled" || status === "declined";
+}
+
+async function resolveSlotStatuses(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  slots: { booked_request_id: string | null }[]
+): Promise<Map<string, string>> {
+  const requestIds = slots
+    .map((s) => s.booked_request_id)
+    .filter((id): id is string => !!id);
+
+  if (requestIds.length === 0) return new Map();
+
+  const { data } = await supabase
+    .from("mentorship_requests")
+    .select("id, status")
+    .in("id", requestIds);
+
+  return new Map((data ?? []).map((r) => [r.id, r.status as string]));
+}
+
+// Future, still-open slots for a mentor's public profile.
+export async function getMentorOpenSlots(mentorId: string): Promise<AvailabilitySlot[]> {
+  const supabase = await createClient();
+
+  const { data: slots } = await supabase
+    .from("mentor_availability_slots")
+    .select("id, starts_at, duration_minutes, join_url, booked_request_id")
+    .eq("mentor_id", mentorId)
+    .gt("starts_at", new Date().toISOString())
+    .order("starts_at", { ascending: true });
+
+  const statusByRequestId = await resolveSlotStatuses(supabase, slots ?? []);
+
+  return (slots ?? [])
+    .filter((s) => isSlotOpen(s.booked_request_id, statusByRequestId))
+    .map((s) => ({
+      id: s.id,
+      startsAt: s.starts_at,
+      durationMinutes: s.duration_minutes,
+      joinUrl: s.join_url,
+      isBooked: false,
+    }));
+}
+
+// Every future slot the signed-in mentor has published, booked or not, for
+// their own availability manager.
+export async function getOwnMentorSlots(): Promise<AvailabilitySlot[] | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return null;
+
+  const { data: mentor } = await supabase
+    .from("mentors")
+    .select("id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (!mentor) return [];
+
+  const { data: slots } = await supabase
+    .from("mentor_availability_slots")
+    .select("id, starts_at, duration_minutes, join_url, booked_request_id")
+    .eq("mentor_id", mentor.id)
+    .gt("starts_at", new Date().toISOString())
+    .order("starts_at", { ascending: true });
+
+  const statusByRequestId = await resolveSlotStatuses(supabase, slots ?? []);
+
+  return (slots ?? []).map((s) => ({
+    id: s.id,
+    startsAt: s.starts_at,
+    durationMinutes: s.duration_minutes,
+    joinUrl: s.join_url,
+    isBooked: !isSlotOpen(s.booked_request_id, statusByRequestId),
+  }));
+}
+
+export async function publishAvailabilitySlot(params: {
+  startsAt: string;
+  durationMinutes: number;
+  joinUrl: string;
+}): Promise<MentorActionResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return { error: "You need to be signed in." };
+  if (!params.startsAt) return { error: "Pick a date and time." };
+  if (new Date(params.startsAt) <= new Date()) {
+    return { error: "That time is in the past." };
+  }
+  if (!Number.isFinite(params.durationMinutes) || params.durationMinutes <= 0) {
+    return { error: "Duration must be a positive number of minutes." };
+  }
+
+  const { data: mentor } = await supabase
+    .from("mentors")
+    .select("id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (!mentor) return { error: "No mentor profile found." };
+
+  const { error } = await supabase.from("mentor_availability_slots").insert({
+    mentor_id: mentor.id,
+    starts_at: new Date(params.startsAt).toISOString(),
+    duration_minutes: params.durationMinutes,
+    join_url: params.joinUrl.trim() || null,
+  });
+
+  if (error) {
+    // unique (mentor_id, starts_at)
+    if (error.code === "23505") {
+      return { error: "You already have a slot at that time." };
+    }
+    return { error: "Could not publish that slot. Try again." };
+  }
+
+  return { error: undefined };
+}
+
+// RLS only permits deleting an unbooked slot, so a booked one silently
+// deletes nothing rather than stranding a member's confirmed session.
+export async function withdrawAvailabilitySlot(slotId: string): Promise<MentorActionResult> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("mentor_availability_slots")
+    .delete()
+    .eq("id", slotId);
+
+  if (error) return { error: "Could not withdraw that slot. Try again." };
+  return { error: undefined };
+}
+
+export async function bookMentorshipSlot(
+  slotId: string,
+  message: string
+): Promise<MentorActionResult> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("book_mentorship_slot", {
+    p_slot_id: slotId,
+    p_message: message.trim() || undefined,
+  });
+
+  if (error) {
+    if (error.message.includes("already booked")) {
+      return { error: "Someone just booked that slot. Pick another time." };
+    }
+    if (error.message.includes("in the past")) {
+      return { error: "That slot has already passed." };
+    }
+    return { error: "Could not book that slot. Try again." };
+  }
+
+  return { error: undefined };
+}
+
 export type MentorshipRequestItem = {
   id: string;
   otherUserId: string;

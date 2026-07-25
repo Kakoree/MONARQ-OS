@@ -3,12 +3,15 @@
 import { revalidatePath } from "next/cache";
 import {
   applyToBeMentor,
+  bookMentorshipSlot,
   cancelMentorshipRequest,
   completeMentorshipRequest,
   confirmMentorshipRequest,
   declineMentorshipRequest,
+  publishAvailabilitySlot,
   requestMentorship,
   updateOwnMentorProfile,
+  withdrawAvailabilitySlot,
 } from "@/lib/mentors";
 
 export type MentorFormState = { error: string; success?: boolean } | undefined;
@@ -94,4 +97,43 @@ export async function cancelRequestAction(requestId: string) {
   await cancelMentorshipRequest(requestId);
   revalidatePath("/mentors/apply");
   revalidatePath("/mentors");
+}
+
+export type SlotFormState = { error: string; success?: boolean } | undefined;
+
+export async function publishSlotAction(
+  _prevState: SlotFormState,
+  formData: FormData
+): Promise<SlotFormState> {
+  const startsAt = String(formData.get("starts_at") ?? "");
+  const durationMinutes = Number(formData.get("duration_minutes") ?? 30);
+  const joinUrl = String(formData.get("join_url") ?? "");
+
+  const result = await publishAvailabilitySlot({ startsAt, durationMinutes, joinUrl });
+  if (result.error) return { error: result.error };
+
+  revalidatePath("/mentors/apply");
+  revalidatePath("/mentors");
+  return { error: "", success: true };
+}
+
+export async function withdrawSlotAction(slotId: string) {
+  await withdrawAvailabilitySlot(slotId);
+  revalidatePath("/mentors/apply");
+  revalidatePath("/mentors");
+}
+
+export async function bookSlotAction(
+  slotId: string,
+  mentorId: string,
+  _prevState: SlotFormState,
+  formData: FormData
+): Promise<SlotFormState> {
+  const message = String(formData.get("message") ?? "");
+  const result = await bookMentorshipSlot(slotId, message);
+  if (result.error) return { error: result.error };
+
+  revalidatePath(`/mentors/${mentorId}`);
+  revalidatePath("/mentors");
+  return { error: "", success: true };
 }

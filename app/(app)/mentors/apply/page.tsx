@@ -1,6 +1,7 @@
-import { getMentorInbox, getOwnMentorStatus } from "@/lib/mentors";
+import { getMentorInbox, getOwnMentorStatus, getOwnMentorSlots } from "@/lib/mentors";
 import { Card } from "@/components/ui/Card";
 import { MentorInbox } from "@/components/mentors/MentorInbox";
+import { MentorAvailability } from "@/components/mentors/MentorAvailability";
 import { ApplyForm } from "./ApplyForm";
 import { EditMentorProfileForm } from "./EditMentorProfileForm";
 
@@ -11,7 +12,10 @@ export default async function MentorApplyPage() {
     return null;
   }
 
-  const inbox = status.state === "approved" ? await getMentorInbox() : null;
+  const [inbox, slots] =
+    status.state === "approved"
+      ? await Promise.all([getMentorInbox(), getOwnMentorSlots()])
+      : [null, null];
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -50,6 +54,8 @@ export default async function MentorApplyPage() {
               isAcceptingRequests={status.isAcceptingRequests}
             />
           </Card>
+
+          <MentorAvailability slots={slots ?? []} />
 
           <div>
             <h2 className="mb-3 text-sm font-medium uppercase tracking-wider text-stone">
