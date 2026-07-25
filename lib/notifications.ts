@@ -27,8 +27,8 @@ export async function createNotification(params: {
     p_user_id: params.userId,
     p_type: params.type,
     p_title: params.title,
-    p_body: params.body ?? null,
-    p_action_url: params.actionUrl ?? null,
+    p_body: params.body,
+    p_action_url: params.actionUrl,
   });
 
   if (error) {

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import type { Json } from "@/lib/supabase/types";
 
 // Best-effort logging — a failed audit write should never block the
 // underlying admin action from succeeding, so errors are swallowed rather
@@ -7,7 +8,7 @@ export async function logAdminAction(params: {
   action: string;
   targetTable?: string;
   targetId?: string;
-  metadata?: Record<string, unknown>;
+  metadata?: Record<string, Json>;
 }) {
   const supabase = await createClient();
   const {

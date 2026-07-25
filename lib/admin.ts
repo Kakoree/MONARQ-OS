@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentMembership } from "@/lib/membership";
-import type { MembershipStatus, MemberRole } from "@/lib/supabase/types";
+import type { MembershipStatus, MemberRole, Json } from "@/lib/supabase/types";
 
 export async function requireAdmin(): Promise<User> {
   const { user, status, role } = await getCurrentMembership();
@@ -292,7 +292,7 @@ export type AuditLogEntry = {
   action: string;
   targetTable: string | null;
   targetId: string | null;
-  metadata: Record<string, unknown> | null;
+  metadata: Json | null;
   createdAt: string;
 };
 
