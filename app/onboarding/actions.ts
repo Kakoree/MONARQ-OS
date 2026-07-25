@@ -29,12 +29,20 @@ export async function redeemAccessCode(
     };
   }
 
-  const { error } = await supabase.rpc("redeem_access_code", {
+  const { data, error } = await supabase.rpc("redeem_access_code", {
     p_code: code,
   });
 
   if (error) {
     return { error: friendlyRedemptionError(error.message) };
+  }
+
+  // A wrong code no longer raises — it returns the membership unchanged, so
+  // the failed attempt it logs survives instead of being rolled back with
+  // the exception (see 0044). Anything short of 'active' means it didn't
+  // take.
+  if (data !== "active") {
+    return { error: "That code is invalid or has expired." };
   }
 
   // Redemption only activates membership — it doesn't complete onboarding.
