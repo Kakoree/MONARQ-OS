@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/cn";
 import { CreateSeasonForm } from "./CreateSeasonForm";
 import { CreateTierForm } from "./CreateTierForm";
+import { TierRow } from "./TierRow";
 import { setActiveSeason, deactivateAllSeasons } from "./actions";
 
 export default async function AdminSeasonsPage() {
@@ -88,13 +89,7 @@ export default async function AdminSeasonsPage() {
           <div className="overflow-hidden rounded-md border border-line">
             <div className="divide-y divide-line">
               {tiers.map((tier) => (
-                <div
-                  key={tier.id}
-                  className="flex items-center justify-between px-4 py-3"
-                >
-                  <p className="text-sm text-paper">{tier.name}</p>
-                  <p className="text-xs text-stone">{tier.minPoints}+ points</p>
-                </div>
+                <TierRow key={tier.id} tier={tier} />
               ))}
             </div>
           </div>

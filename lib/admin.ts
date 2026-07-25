@@ -230,6 +230,87 @@ export async function getMentorsAdmin(): Promise<AdminMentor[]> {
   }));
 }
 
+export type AdminTeachingCategory = {
+  id: string;
+  name: string;
+  sortOrder: number;
+  mentorId: string | null;
+  mentorName: string | null;
+};
+
+export async function getTeachingCategoriesAdmin(): Promise<AdminTeachingCategory[]> {
+  const supabase = await createClient();
+
+  const { data: categories } = await supabase
+    .from("teaching_categories")
+    .select("id, name, sort_order, mentor_id")
+    .order("sort_order", { ascending: true });
+
+  const mentorIds = Array.from(
+    new Set((categories ?? []).map((c) => c.mentor_id).filter((id): id is string => !!id))
+  );
+  const { data: mentorRows } = mentorIds.length
+    ? await supabase.from("mentors").select("id, user_id").in("id", mentorIds)
+    : { data: [] as { id: string; user_id: string }[] };
+  const mentorUserIds = (mentorRows ?? []).map((m) => m.user_id);
+  const { data: mentorProfiles } = mentorUserIds.length
+    ? await supabase.from("profiles").select("id, display_name").in("id", mentorUserIds)
+    : { data: [] as { id: string; display_name: string | null }[] };
+  const mentorNameByMentorId = new Map(
+    (mentorRows ?? []).map((m) => [
+      m.id,
+      mentorProfiles?.find((p) => p.id === m.user_id)?.display_name ?? "Mentor",
+    ])
+  );
+
+  return (categories ?? []).map((c) => ({
+    id: c.id,
+    name: c.name,
+    sortOrder: c.sort_order,
+    mentorId: c.mentor_id,
+    mentorName: c.mentor_id ? (mentorNameByMentorId.get(c.mentor_id) ?? null) : null,
+  }));
+}
+
+export type AdminTeaching = {
+  id: string;
+  categoryId: string | null;
+  title: string;
+  summary: string;
+  body: string;
+  requiredRole: MemberRole;
+  sortOrder: number;
+  isPublished: boolean;
+};
+
+// Includes the teaching_content body (split from teachings in 0007 so
+// member-facing reads could gate it) since the admin edit form needs the
+// full text, not just the metadata lib/teachings.ts exposes to members.
+export async function getTeachingsAdmin(): Promise<AdminTeaching[]> {
+  const supabase = await createClient();
+
+  const [{ data: teachings }, { data: content }] = await Promise.all([
+    supabase
+      .from("teachings")
+      .select("id, category_id, title, summary, required_role, sort_order, is_published")
+      .order("sort_order", { ascending: true }),
+    supabase.from("teaching_content").select("teaching_id, body"),
+  ]);
+
+  const bodyByTeachingId = new Map((content ?? []).map((c) => [c.teaching_id, c.body]));
+
+  return (teachings ?? []).map((t) => ({
+    id: t.id,
+    categoryId: t.category_id,
+    title: t.title,
+    summary: t.summary,
+    body: bodyByTeachingId.get(t.id) ?? "",
+    requiredRole: t.required_role,
+    sortOrder: t.sort_order,
+    isPublished: t.is_published,
+  }));
+}
+
 export type AdminDrop = {
   id: string;
   title: string;

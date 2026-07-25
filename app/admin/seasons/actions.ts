@@ -113,3 +113,61 @@ export async function createTier(
 
   revalidatePath("/admin/seasons");
 }
+
+export async function updateTier(
+  tierId: string,
+  _prevState: TierFormState,
+  formData: FormData
+): Promise<TierFormState> {
+  const admin = await requireAdmin();
+  if (!admin) redirect("/login");
+
+  const name = String(formData.get("name") ?? "").trim();
+  const minPoints = Number(formData.get("min_points") ?? 0);
+  const sortOrder = Number(formData.get("sort_order") ?? 0);
+
+  if (!name) return { error: "Enter a tier name." };
+  if (!Number.isFinite(minPoints) || minPoints < 0) {
+    return { error: "Minimum points must be zero or more." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("tiers")
+    .update({ name, min_points: minPoints, sort_order: sortOrder })
+    .eq("id", tierId);
+
+  if (error) {
+    return { error: "Could not update that tier. Try again." };
+  }
+
+  await logAdminAction({
+    action: "tier_updated",
+    targetTable: "tiers",
+    targetId: tierId,
+    metadata: { name, min_points: minPoints, sort_order: sortOrder },
+  });
+
+  revalidatePath("/admin/seasons");
+}
+
+// drops.required_tier_id is `on delete set null` (0040), so removing a
+// tier safely un-gates any drop pointing at it rather than erroring.
+export async function deleteTier(tierId: string) {
+  const admin = await requireAdmin();
+  if (!admin) redirect("/login");
+
+  const supabase = await createClient();
+  await supabase.from("tiers").delete().eq("id", tierId);
+
+  await logAdminAction({
+    action: "tier_deleted",
+    targetTable: "tiers",
+    targetId: tierId,
+  });
+
+  revalidatePath("/admin/seasons");
+  revalidatePath("/admin/drops");
+  revalidatePath("/drops");
+  revalidatePath("/home");
+}

@@ -18,8 +18,11 @@ export default async function AdminMentorsPage() {
           <h1 className="font-display text-2xl text-paper">Mentors</h1>
           <p className="mt-1 text-sm text-stone">
             Approve applications and manage the mentor directory. Assign a
-            mentor to a teaching track via the teaching_categories.mentor_id
-            column directly for now.
+            mentor to a teaching track from the{" "}
+            <Link href="/admin/teachings" className="text-gold hover:underline">
+              Teachings
+            </Link>{" "}
+            page.
           </p>
         </div>
         <Link

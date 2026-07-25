@@ -7,6 +7,7 @@ const ADMIN_NAV = [
   { label: "Access Codes", href: "/admin/access-codes" },
   { label: "Identity Markers", href: "/admin/identity-markers" },
   { label: "Seasons", href: "/admin/seasons" },
+  { label: "Teachings", href: "/admin/teachings" },
   { label: "Challenges", href: "/admin/challenges" },
   { label: "Mentors", href: "/admin/mentors" },
   { label: "Drops", href: "/admin/drops" },
