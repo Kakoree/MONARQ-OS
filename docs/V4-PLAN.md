@@ -1,9 +1,18 @@
 # MONARQ OS — V4 Plan
 
-Planning only — no code written against this document yet. Written
-2026-07-25, immediately after V3 shipped to production. Grounded in a
-direct query of the live database, not in what the V3 plan assumed would
-be true by now. See "What was verified" at the end.
+Written 2026-07-25, immediately after V3 shipped to production. Grounded
+in a direct query of the live database, not in what the V3 plan assumed
+would be true by now. See "What was verified" at the end.
+
+> **Status: Phases 0–4 shipped the same day** (commit `1ced3ad`). Part 1's
+> numbers below are the *pre-V4* state and are deliberately left as
+> written — they are the evidence the plan was built on. What changed:
+> the admin dashboard now counts real accounts only; the app is no longer
+> empty (Season I, 5 tiers, 5 tracks, 11 teachings, 3 challenges); the
+> test suite cleans up after itself; CI exists; and an onboarding funnel
+> replaced guesswork. Phase 5+ remains deliberately unplanned.
+>
+> One item was consciously **not** done — see Phase 2, item 3.
 
 ---
 
@@ -122,6 +131,15 @@ approve.
    (flagged in V3 Part 4 and still true at 45 files). Every one has been
    applied by hand via MCP. This gets more expensive to reconcile, never
    less.
+   **Not done, deliberately.** 41 migrations are tracked in
+   `supabase_migrations.schema_migrations` against 47 files on disk, but
+   the tracked rows are timestamp versions that do not map to the
+   `0001_`-style filenames. Reconciling means guessing that mapping, and
+   guessing wrong makes a future `supabase db push` either re-run applied
+   migrations or skip unapplied ones. A documented inconsistency is safer
+   than a rewritten history that looks correct and isn't. Revisit when
+   the Supabase CLI is installed and `migration list` can be read
+   directly.
 **Why here:** All three are cheap now and compounding. CI in particular is
 what makes it safe to move fast once there are real members to break
 things for.
