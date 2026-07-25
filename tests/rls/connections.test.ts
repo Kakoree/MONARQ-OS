@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { FIXTURES, signInAs } from "../setup/clients";
+import { clearNotificationsFor } from "../setup/admin";
 import type { Database } from "../../lib/supabase/types";
 
 let memberA: SupabaseClient<Database>;
@@ -22,6 +23,15 @@ afterAll(async () => {
   if (connectionId) {
     await admin.from("connections").delete().eq("id", connectionId);
   }
+
+  // request_connection / respond_connection both notify, and notifications
+  // has no delete policy for anyone (0026).
+  await clearNotificationsFor([
+    FIXTURES.memberA.id,
+    FIXTURES.memberB.id,
+    FIXTURES.mentorA.id,
+    FIXTURES.adminA.id,
+  ]);
 });
 
 describe("request_connection", () => {

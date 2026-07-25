@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getAllMembers, getAccessCodes } from "@/lib/admin";
+import { getAllMembers, getAccessCodes, realMembersOnly } from "@/lib/admin";
 import {
   getMembershipBreakdown,
   getMemberGrowthByWeek,
@@ -9,6 +9,7 @@ import {
   getRecentActivity,
   getAccessCodeSummary,
   getConnectionStats,
+  getOnboardingFunnel,
 } from "@/lib/analytics";
 import { getRetentionInsights } from "@/lib/insights";
 import { Card } from "@/components/ui/Card";
@@ -37,11 +38,16 @@ export default async function AdminOverviewPage() {
       getConnectionStats(),
     ]);
 
-  const breakdown = getMembershipBreakdown(members);
-  const weeklySignups = getMemberGrowthByWeek(members, 8);
+  // Every statistic below counts real accounts only — RLS-test fixtures are
+  // infrastructure, not members, and including them made this page report
+  // 15 active members when 3 were real (V4 Phase 0).
+  const realMembers = realMembersOnly(members);
+  const breakdown = getMembershipBreakdown(realMembers);
+  const weeklySignups = getMemberGrowthByWeek(realMembers, 8);
   const xpTrend = await getXpTrend(14);
   const accessCodeSummary = getAccessCodeSummary(accessCodes);
   const retention = await getRetentionInsights(breakdown.active, activeThisWeek);
+  const funnel = await getOnboardingFunnel();
 
   return (
     <div className="space-y-8">
@@ -182,6 +188,53 @@ export default async function AdminOverviewPage() {
             </div>
           </Card>
         </Reveal>
+      </div>
+
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-sm font-medium uppercase tracking-wider text-stone">
+            Onboarding funnel
+          </h2>
+          <p className="mt-1 text-xs text-stone">
+            Real accounts only — test fixtures excluded. The drop between any
+            two of these is where members are actually being lost.
+          </p>
+        </div>
+        <div className="overflow-hidden rounded-md border border-line">
+          <div className="divide-y divide-line">
+            {[
+              { label: "Signed up", value: funnel.signedUp },
+              { label: "Membership activated", value: funnel.activated },
+              { label: "Finished onboarding", value: funnel.completedOnboarding },
+              { label: "Logged a first check-in", value: funnel.loggedFirstCheckIn },
+              { label: "Came back a second day", value: funnel.returnedASecondDay },
+            ].map((step) => (
+              <div
+                key={step.label}
+                className="flex items-center justify-between gap-3 px-4 py-3"
+              >
+                <p className="text-sm text-paper">{step.label}</p>
+                <div className="flex items-center gap-3">
+                  <div className="h-1.5 w-32 overflow-hidden rounded-full bg-surface-raised">
+                    <div
+                      className="h-full rounded-full bg-gold"
+                      style={{
+                        width: `${
+                          funnel.signedUp > 0
+                            ? Math.round((step.value / funnel.signedUp) * 100)
+                            : 0
+                        }%`,
+                      }}
+                    />
+                  </div>
+                  <p className="w-8 text-right font-display text-lg text-paper">
+                    {step.value}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="space-y-4">

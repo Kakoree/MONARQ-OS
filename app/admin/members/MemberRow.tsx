@@ -24,6 +24,11 @@ export function MemberRow({
         <p className="text-sm text-paper">
           {member.displayName ?? "Member"}{" "}
           {isSelf && <span className="text-stone">(you)</span>}
+          {member.isTestAccount && (
+            <span className="ml-2 font-sans text-xs text-stone">
+              test account — excluded from all stats
+            </span>
+          )}
         </p>
         <p className="text-xs text-stone">{member.userId}</p>
       </div>

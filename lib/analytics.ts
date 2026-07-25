@@ -107,19 +107,77 @@ export async function getActiveMembersThisWeek(days = 7): Promise<number> {
   const startIso = start.toISOString();
   const startDate = startIso.slice(0, 10);
 
-  const [{ data: checkIns }, { data: events }] = await Promise.all([
+  const [{ data: checkIns }, { data: events }, testIds] = await Promise.all([
     supabase
       .from("habit_check_ins")
       .select("user_id")
       .gte("completed_on", startDate),
     supabase.from("xp_events").select("user_id").gte("created_at", startIso),
+    getTestAccountIds(),
   ]);
 
   const activeIds = new Set<string>();
   for (const c of checkIns ?? []) activeIds.add(c.user_id);
   for (const e of events ?? []) activeIds.add(e.user_id);
+  for (const id of testIds) activeIds.delete(id);
 
   return activeIds.size;
+}
+
+// RLS-test fixtures check in and earn XP during every suite run, so any
+// activity metric that counts them is measuring the test suite.
+async function getTestAccountIds(): Promise<Set<string>> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("is_test_account", true);
+  return new Set((data ?? []).map((p) => p.id));
+}
+
+export type OnboardingFunnel = {
+  signedUp: number;
+  activated: number;
+  completedOnboarding: number;
+  loggedFirstCheckIn: number;
+  returnedASecondDay: number;
+};
+
+// The only numbers that matter pre-launch: of the people actually invited,
+// how many made it to being a member who comes back. Real accounts only.
+export async function getOnboardingFunnel(): Promise<OnboardingFunnel> {
+  const supabase = await createClient();
+
+  const [{ data: profiles }, { data: memberships }, { data: checkIns }] =
+    await Promise.all([
+      supabase
+        .from("profiles")
+        .select("id, onboarding_completed_at")
+        .eq("is_test_account", false),
+      supabase.from("memberships").select("user_id, status"),
+      supabase.from("habit_check_ins").select("user_id, completed_on"),
+    ]);
+
+  const realIds = new Set((profiles ?? []).map((p) => p.id));
+  const statusByUser = new Map((memberships ?? []).map((m) => [m.user_id, m.status]));
+
+  // Distinct *days* per member — two check-ins on one day is still one day,
+  // and "came back" is the thing being measured.
+  const daysByUser = new Map<string, Set<string>>();
+  for (const c of checkIns ?? []) {
+    if (!realIds.has(c.user_id)) continue;
+    const days = daysByUser.get(c.user_id) ?? new Set<string>();
+    days.add(c.completed_on);
+    daysByUser.set(c.user_id, days);
+  }
+
+  return {
+    signedUp: realIds.size,
+    activated: (profiles ?? []).filter((p) => statusByUser.get(p.id) === "active").length,
+    completedOnboarding: (profiles ?? []).filter((p) => p.onboarding_completed_at).length,
+    loggedFirstCheckIn: Array.from(daysByUser.values()).filter((d) => d.size >= 1).length,
+    returnedASecondDay: Array.from(daysByUser.values()).filter((d) => d.size >= 2).length,
+  };
 }
 
 export type ChallengeCompletionRate = { rate: number; completed: number; total: number };

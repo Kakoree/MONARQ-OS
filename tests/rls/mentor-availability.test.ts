@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { FIXTURES, signInAs } from "../setup/clients";
+import { clearNotificationsFor } from "../setup/admin";
 import type { Database } from "../../lib/supabase/types";
 
 let memberA: SupabaseClient<Database>;
@@ -59,6 +60,14 @@ afterAll(async () => {
   for (const id of createdRequestIds) {
     await admin.from("mentorship_requests").delete().eq("id", id);
   }
+
+  // book_mentorship_slot and cancel_mentorship_request both notify.
+  await clearNotificationsFor([
+    FIXTURES.memberA.id,
+    FIXTURES.memberB.id,
+    FIXTURES.mentorA.id,
+    FIXTURES.adminA.id,
+  ]);
 });
 
 describe("mentor_availability_slots write policies", () => {

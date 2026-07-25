@@ -20,13 +20,14 @@ export type AdminMemberRow = {
   status: MembershipStatus;
   role: MemberRole;
   createdAt: string;
+  isTestAccount: boolean;
 };
 
 export async function getAllMembers(): Promise<AdminMemberRow[]> {
   const supabase = await createClient();
 
   const [{ data: profiles }, { data: memberships }] = await Promise.all([
-    supabase.from("profiles").select("id, display_name, created_at"),
+    supabase.from("profiles").select("id, display_name, created_at, is_test_account"),
     supabase.from("memberships").select("user_id, status, role"),
   ]);
 
@@ -42,8 +43,19 @@ export async function getAllMembers(): Promise<AdminMemberRow[]> {
       status: membership?.status ?? "pending",
       role: membership?.role ?? "guest",
       createdAt: p.created_at,
+      isTestAccount: p.is_test_account,
     };
   });
+}
+
+// Everything member-facing counts only real accounts. getAllMembers()
+// deliberately still returns the RLS-test fixtures so the admin Members
+// page can see and manage them — but no statistic should include them.
+// Before V4 Phase 0 the overview reported 15 active members when 3 were
+// real, which is exactly the kind of fabricated number the brand doctrine
+// rules out.
+export function realMembersOnly(members: AdminMemberRow[]): AdminMemberRow[] {
+  return members.filter((m) => !m.isTestAccount);
 }
 
 export type AdminAccessCode = {

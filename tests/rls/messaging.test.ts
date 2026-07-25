@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { FIXTURES, signInAs } from "../setup/clients";
+import { clearNotificationsFor } from "../setup/admin";
 import type { Database } from "../../lib/supabase/types";
 
 let memberA: SupabaseClient<Database>;
@@ -53,6 +54,16 @@ afterAll(async () => {
     await memberB.from("direct_messages").delete().eq("id", id);
   }
   if (connectionId) await admin.from("connections").delete().eq("id", connectionId);
+
+  // send_direct_message fires a notification, and notifications has no
+  // delete policy for anyone (0026) — so without this they accumulate on
+  // the fixture accounts every run.
+  await clearNotificationsFor([
+    FIXTURES.memberA.id,
+    FIXTURES.memberB.id,
+    FIXTURES.mentorA.id,
+    FIXTURES.adminA.id,
+  ]);
 });
 
 describe("pod_messages", () => {

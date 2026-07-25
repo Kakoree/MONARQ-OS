@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Typecheck, lint, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Lint
+        run: npm run lint
+      - name: Build
+        # next build reads NEXT_PUBLIC_* at build time. These are the
+        # publishable values already exposed to every browser that loads
+        # the app — they are not secrets, and RLS is what protects the
+        # data. Using placeholders here would only prove a build works
+        # against values production never uses.
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+
+  rls-tests:
+    name: RLS test suite
+    runs-on: ubuntu-latest
+    # These run against the real Supabase project using disposable fixture
+    # accounts, so they only run when the repository has the credentials
+    # configured. Without them the job is skipped rather than failing red
+    # on every fork and outside contribution.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Run RLS tests
+        run: |
+          if [ -z "$TEST_MEMBER_A_PASSWORD" ]; then
+            echo "::warning::Fixture credentials not configured — skipping RLS suite."
+            exit 0
+          fi
+          npm test
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          TEST_MEMBER_A_EMAIL: ${{ vars.TEST_MEMBER_A_EMAIL }}
+          TEST_MEMBER_A_PASSWORD: ${{ secrets.TEST_MEMBER_A_PASSWORD }}
+          TEST_MEMBER_A_ID: ${{ vars.TEST_MEMBER_A_ID }}
+          TEST_MEMBER_B_EMAIL: ${{ vars.TEST_MEMBER_B_EMAIL }}
+          TEST_MEMBER_B_PASSWORD: ${{ secrets.TEST_MEMBER_B_PASSWORD }}
+          TEST_MEMBER_B_ID: ${{ vars.TEST_MEMBER_B_ID }}
+          TEST_MENTOR_A_EMAIL: ${{ vars.TEST_MENTOR_A_EMAIL }}
+          TEST_MENTOR_A_PASSWORD: ${{ secrets.TEST_MENTOR_A_PASSWORD }}
+          TEST_MENTOR_A_ID: ${{ vars.TEST_MENTOR_A_ID }}
+          TEST_ADMIN_A_EMAIL: ${{ vars.TEST_ADMIN_A_EMAIL }}
+          TEST_ADMIN_A_PASSWORD: ${{ secrets.TEST_ADMIN_A_PASSWORD }}
+          TEST_ADMIN_A_ID: ${{ vars.TEST_ADMIN_A_ID }}

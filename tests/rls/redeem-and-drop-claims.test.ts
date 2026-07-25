@@ -1,16 +1,18 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { anonClient, FIXTURES, signInAs } from "../setup/clients";
+import { deleteTestUsers, hasServiceKey } from "../setup/admin";
 import type { Database } from "../../lib/supabase/types";
 
 // redeem_access_code() only does real work for a *pending* member — it
 // early-returns for anyone already active (see the function body), so this
 // path can't be exercised with the persistent fixtures at all. Each test
-// run signs up fresh disposable accounts instead. Known limitation: these
-// accounts can't be deleted without a service-role key (the chosen test
-// strategy deliberately avoids one), so they persist as real active
-// members afterward. Acceptable for now, but worth an occasional manual
-// prune — see the note at the bottom of this file.
+// run signs up fresh disposable accounts instead.
+//
+// Those accounts are now torn down in afterAll via the service-role admin
+// API (tests/setup/admin.ts). Before V4 Phase 0 they could not be, and 12
+// of them had accumulated in production data — enough to make the admin
+// dashboard report 15 "active members" when only 3 were real.
 
 let admin: SupabaseClient<Database>;
 let dropId: string;
@@ -55,19 +57,35 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  // Row cleanup only — the disposable auth.users this test creates can't
-  // be removed without a service-role key, by design of the chosen
-  // no-elevated-credential test strategy.
+  // Users first, deliberately. redemptions holds a foreign key to
+  // access_codes, so deleting a redeemed code while its redemption still
+  // exists fails — silently, since teardown ignores errors. That ordering
+  // bug left six stale test codes in production data before it was caught.
+  // Deleting the auth user cascades its profile, membership, redemptions
+  // and access_code_attempts, which then frees the codes.
+  if (!hasServiceKey()) {
+    console.warn(
+      "SUPABASE_SERVICE_ROLE_KEY not set — disposable test accounts will be left behind."
+    );
+  }
+  await deleteTestUsers(disposableUserIds);
+
   await admin.from("access_codes").delete().eq("id", codeId);
   await admin.from("access_codes").delete().eq("id", throttleCodeId);
   await admin.from("drops").delete().eq("id", dropId);
 });
 
+const disposableUserIds: string[] = [];
+
 async function signUpFreshPendingUser() {
   const client = anonClient();
   const email = `monarq-test-redeem-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`;
-  const { error } = await client.auth.signUp({ email, password: "Test-Password-123!" });
+  const { data, error } = await client.auth.signUp({
+    email,
+    password: "Test-Password-123!",
+  });
   if (error) throw error;
+  if (data.user?.id) disposableUserIds.push(data.user.id);
   return client;
 }
 
@@ -197,9 +215,6 @@ describe("access-code guess throttling (0044)", () => {
   });
 });
 
-// Manual prune, run occasionally via the Supabase MCP (or dashboard SQL
-// editor) — not part of the automated suite, since deleting auth.users
-// needs elevated access this suite deliberately doesn't have:
+// If a run is killed mid-suite, teardown won't have executed. Prune with:
 //
 //   delete from auth.users where email like 'monarq-test-redeem-%@example.com';
-//   delete from public.access_code_attempts;
